@@ -1,3 +1,5 @@
+Module NuturalNumbers.
+
 Inductive peano : Set :=
     | Z : peano
     | S : peano -> peano.
@@ -91,4 +93,6 @@ Inductive DetReduceTo : Exp -> Exp -> Prop :=
     | DR_TimesR : forall (n1 : peano) (e2 e2' : Exp),
                   DetReduceTo e2 e2' ->
                   DetReduceTo (ETimes (ENum n1) e2) (ETimes (ENum n1) e2').
+
+End NuturalNumbers.
 
