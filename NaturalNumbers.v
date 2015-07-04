@@ -1,4 +1,4 @@
-Module NuturalNumbers.
+Section NaturalNumbers.
 
 Inductive peano : Set :=
     | Z : peano
@@ -94,5 +94,5 @@ Inductive DetReduceTo : Exp -> Exp -> Prop :=
                   DetReduceTo e2 e2' ->
                   DetReduceTo (ETimes (ENum n1) e2) (ETimes (ENum n1) e2').
 
-End NuturalNumbers.
+End NaturalNumbers.
 
