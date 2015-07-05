@@ -53,7 +53,7 @@ Inductive EvalTo : Exp -> peano -> Prop :=
 Inductive ReduceTo : Exp -> Exp -> Prop :=
     | R_Plus   : forall n1 n2 n3 : peano,
                  Plus n1 n2 n3 -> ReduceTo (EPlus (ENum n1) (ENum n2)) (ENum n3)
-    | R_Timss  : forall n1 n2 n3 : peano,
+    | R_Times  : forall n1 n2 n3 : peano,
                  Times n1 n2 n3 ->
                  ReduceTo (ETimes (ENum n1) (ENum n2)) (ENum n3)
     | R_PlusL  : forall e1 e1' e2 : Exp,
