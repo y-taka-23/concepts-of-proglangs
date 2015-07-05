@@ -122,7 +122,15 @@ Admitted.
 Theorem LessThan1_Z_Sn :
     forall n : peano, LessThan1 Z (S n).
 Proof.
-Admitted.
+    induction n as [| n' H'].
+    
+        (* Case : n = Z *)
+        apply L1_Succ.
+    
+        (* Case : n = S n' *)
+        apply (L1_Trans _ (S n') _ H').
+        apply L1_Succ.
+Qed.
 
 (* Theorem 2.11 (CompareNat2) *)
 Theorem LessThan2_Z_Sn :
