@@ -5,13 +5,21 @@ Require Import NaturalNumbers.
 Theorem Plus_unit_l :
     forall n : peano, Plus Z n n.
 Proof.
-Admitted.
+    apply P_Zero.
+Qed.
 
 (* Theorem 2.1 (2) *)
 Theorem Plus_unit_r :
     forall n : peano, Plus n Z n.
 Proof.
-Admitted.
+    induction n as [| n' H_n'].
+    
+        (* Case : n = Z *)
+        apply P_Zero.
+    
+        (* Case : n = S n' *)
+        apply (P_Succ _ _ _ H_n').
+Qed.
 
 (* Theorem 2.2 *)
 Theorem Plus_uniq :
@@ -23,7 +31,18 @@ Admitted.
 Theorem Plus_exists :
     forall n1 n2 : peano, exists n3 : peano, Plus n1 n2 n3.
 Proof.
-Admitted.
+    intros n1 n2.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        exists n2.
+        apply P_Zero.
+    
+        (* Case : n1 = S n1' *)
+        destruct H1 as [n3 H3].
+        exists (S n3).
+        apply (P_Succ _ _ _ H3).
+Qed.
 
 (* Theorem 2.4 *)
 Theorem Plus_sym :
@@ -49,19 +68,41 @@ Admitted.
 Theorem Times_exists :
     forall n1 n2 : peano, exists n3 : peano, Times n1 n2 n3.
 Proof.
-Admitted.
+    intros n1 n2.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        exists Z.
+        apply T_Zero.
+    
+        (* Case : n1 = S n1' *)
+        destruct H1 as [n3 H3].
+        assert (exists n4, Plus n2 n3 n4) by apply Plus_exists.
+        destruct H as [n4 H4].
+        exists n4.
+        apply (T_Succ _ _ n3 _ H3 H4).
+Qed.
 
 (* Theorem 2.8 (1) *)
 Theorem Times_zero_l :
     forall n : peano, Times Z n Z.
 Proof.
-Admitted.
+    apply T_Zero.
+Qed.
 
 (* Theorem 2.8 (2) *)
 Theorem Times_zero_r :
     forall n : peano, Times n Z Z.
 Proof.
-Admitted.
+    induction n as [| n' H].
+    
+        (* Case : n = Z *)
+        apply T_Zero.
+    
+        (* Case : n = S n' *)
+        apply (T_Succ _ _ Z _ H).
+        apply P_Zero.
+Qed.
 
 (* Theorem 2.9 *)
 Theorem Times_sym :
@@ -87,13 +128,21 @@ Admitted.
 Theorem LessThan2_Z_Sn :
     forall n : peano, LessThan2 Z (S n).
 Proof.
-Admitted.
+    apply L2_Zero.
+Qed.
 
 (* Theorem 2.11 (CompareNat3) *)
 Theorem LessThan3_Z_Sn :
     forall n : peano, LessThan3 Z (S n).
 Proof.
-Admitted.
+    induction n as [| n' H].
+    
+        (* Case : n = Z *)
+        apply L3_Succ.
+    
+        (* Case : n = S n' *)
+        apply (L3_SuccR _ _ H).
+Qed.
 
 (* Theorem 2.12 (CompareNat1) *)
 Theorem LessThan1_prev :
@@ -118,7 +167,8 @@ Theorem LessThan1_trans :
     forall n1 n2 n3 : peano,
     LessThan1 n1 n2 -> LessThan1 n2 n3 -> LessThan1 n1 n3.
 Proof.
-Admitted.
+    apply L1_Trans.
+Qed.
 
 (* Theorem 2.13 (CompareNat2 *)
 Theorem LessThan2_trans :
@@ -156,7 +206,24 @@ Admitted.
 Theorem EvalTo_total :
     forall e : Exp, exists n : peano, EvalTo e n.
 Proof.
-Admitted.
+    induction e as [ n1 | e1 [n1 H1] e2 [n2 H2] | e1 [n1 H1] e2 [n2 H2]].
+    
+        (* Case : e = ENum n1 *)
+        exists n1.
+        apply E_Const.
+    
+        (* Case : e = EPlus e1 e2 *)
+        assert (exists n, Plus n1 n2 n) by apply Plus_exists.
+        destruct H as [n H].
+        exists n.
+        apply (E_Plus _ _ n1 n2 _ H1 H2 H).
+    
+        (* Case : e = ETimes e1 e2 *)
+        assert (exists n, Times n1 n2 n) by apply Times_exists.
+        destruct H as [n H].
+        exists n.
+        apply (E_Times _ _ n1 n2 _ H1 H2 H).
+Qed.
 
 (* Theorem 2.16 *)
 Theorem EvalTo_uniq :
@@ -240,3 +307,4 @@ Proof.
 Admitted.
 
 End Metatheorems.
+
