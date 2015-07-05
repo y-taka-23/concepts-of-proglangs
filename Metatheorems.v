@@ -25,7 +25,23 @@ Qed.
 Theorem Plus_uniq :
     forall n1 n2 n3 n4 : peano, Plus n1 n2 n3 -> Plus n1 n2 n4 -> n3 = n4.
 Proof.
-Admitted.
+    intros n1 n2.
+    induction n1 as [| n1' H'].
+    
+        (* Case : n1 = Z *)
+        intros n3 n4 H3 H4.
+        inversion H3; subst.
+        inversion H4; subst.
+        reflexivity.
+    
+        (* Case : n1 = S n1' *)
+        intros n3 n4 H3 H4.
+        inversion H3 as [| t1 t2 n3' H3']; subst.
+        inversion H4 as [| t1 t2 n4' H4']; subst.
+        assert (n3' = n4') by apply (H' _ _ H3' H4').
+        subst.
+        reflexivity.
+Qed.
 
 (* Theorem 2.3 *)
 Theorem Plus_exists :
