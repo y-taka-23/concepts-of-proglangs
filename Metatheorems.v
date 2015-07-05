@@ -60,11 +60,41 @@ Proof.
         apply (P_Succ _ _ _ H3).
 Qed.
 
+(* Exercise 2.2 *)
+Lemma P_Succ_r :
+    forall n1 n2 n3 : peano, Plus n1 n2 n3 -> Plus n1 (S n2) (S n3).
+Proof.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        intros n2 n3 H.
+        inversion H; subst.
+        apply P_Zero.
+    
+        (* Case : n1 = S n' *)
+        intros n2 n3 H.
+        inversion H; subst.
+        apply P_Succ.
+        apply (H1 _ _ H2).
+Qed.
+
 (* Theorem 2.4 *)
 Theorem Plus_comm :
     forall n1 n2 n3 : peano, Plus n1 n2 n3 -> Plus n2 n1 n3.
 Proof.
-Admitted.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        intros n2 n3 H.
+        inversion H; subst.
+        apply Plus_unit_r.
+    
+        (* Case : n1 = S n1' *)
+        intros n2 n3 H.
+        inversion H; subst.
+        apply P_Succ_r.
+        apply (H1 _ _ H2).
+Qed.
 
 (* Theorem 2.5 *)
 Theorem Plus_assoc :
