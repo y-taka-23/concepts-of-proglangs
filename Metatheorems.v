@@ -45,7 +45,7 @@ Proof.
 Qed.
 
 (* Theorem 2.4 *)
-Theorem Plus_sym :
+Theorem Plus_comm :
     forall n1 n2 n3 : peano, Plus n1 n2 n3 -> Plus n2 n1 n3.
 Proof.
 Admitted.
@@ -105,7 +105,7 @@ Proof.
 Qed.
 
 (* Theorem 2.9 *)
-Theorem Times_sym :
+Theorem Times_comm :
     forall n1 n2 n3 : peano, Times n1 n2 n3 -> Times n2 n1 n3.
 Proof.
 Admitted.
