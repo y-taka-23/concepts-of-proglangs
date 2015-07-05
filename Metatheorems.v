@@ -44,7 +44,7 @@ Proof.
 Qed.
 
 (* Theorem 2.3 *)
-Theorem Plus_exists :
+Theorem Plus_close :
     forall n1 n2 : peano, exists n3 : peano, Plus n1 n2 n3.
 Proof.
     intros n1 n2.
@@ -67,7 +67,7 @@ Proof.
 Admitted.
 
 (* Theorem 2.5 *)
-Theorem Plus_split :
+Theorem Plus_assoc :
     forall n1 n2 n3 n4 n5 : peano,
     Plus n1 n2 n4 -> Plus n4 n3 n5 ->
     exists n6 : peano, Plus n2 n3 n6 /\ Plus n1 n6 n5.
@@ -81,7 +81,7 @@ Proof.
 Admitted.
 
 (* Theorem 2.7 *)
-Theorem Times_exists :
+Theorem Times_close :
     forall n1 n2 : peano, exists n3 : peano, Times n1 n2 n3.
 Proof.
     intros n1 n2.
@@ -93,7 +93,7 @@ Proof.
     
         (* Case : n1 = S n1' *)
         destruct H1 as [n3 H3].
-        assert (exists n4, Plus n2 n3 n4) by apply Plus_exists.
+        assert (exists n4, Plus n2 n3 n4) by apply Plus_close.
         destruct H as [n4 H4].
         exists n4.
         apply (T_Succ _ _ n3 _ H3 H4).
@@ -127,7 +127,7 @@ Proof.
 Admitted.
 
 (* Theorem 2.10 *)
-Theorem Times_split :
+Theorem Times_assoc :
     forall n1 n2 n3 n4 n5 : peano,
     Times n1 n2 n4 -> Times n4 n3 n5 ->
     exists n6 : peano, Times n2 n3 n6 /\ Times n1 n6 n5.
@@ -237,13 +237,13 @@ Proof.
         apply E_Const.
     
         (* Case : e = EPlus e1 e2 *)
-        assert (exists n, Plus n1 n2 n) by apply Plus_exists.
+        assert (exists n, Plus n1 n2 n) by apply Plus_close.
         destruct H as [n H].
         exists n.
         apply (E_Plus _ _ n1 n2 _ H1 H2 H).
     
         (* Case : e = ETimes e1 e2 *)
-        assert (exists n, Times n1 n2 n) by apply Times_exists.
+        assert (exists n, Times n1 n2 n) by apply Times_close.
         destruct H as [n H].
         exists n.
         apply (E_Times _ _ n1 n2 _ H1 H2 H).
