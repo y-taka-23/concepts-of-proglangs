@@ -239,7 +239,7 @@ Proof.
 Admitted.
 
 (* Theorem 2.18 *)
-Theorem EPlus_concat :
+Theorem EPlus_assoc :
     forall (e1 e2 e3 : Exp) (n : peano),
     EvalTo (EPlus (EPlus e1 e2) e3) n -> EvalTo (EPlus e1 (EPlus e2 e3)) n.
 Proof.
@@ -253,7 +253,7 @@ Proof.
 Admitted.
 
 (* Theorem 2.20 *)
-Theorem ETimes_concat :
+Theorem ETimes_assoc :
     forall (e1 e2 e3 : Exp) (n : peano),
     EvalTo (ETimes (ETimes e1 e2) e3) n -> EvalTo (ETimes e1 (ETimes e2 e3)) n.
 Proof.
