@@ -162,7 +162,7 @@ Theorem LessThan3_prev :
 Proof.
 Admitted.
 
-(* Theorem 2.13 (CompareNat1 *)
+(* Theorem 2.13 (CompareNat1) *)
 Theorem LessThan1_trans :
     forall n1 n2 n3 : peano,
     LessThan1 n1 n2 -> LessThan1 n2 n3 -> LessThan1 n1 n3.
@@ -170,14 +170,14 @@ Proof.
     apply L1_Trans.
 Qed.
 
-(* Theorem 2.13 (CompareNat2 *)
+(* Theorem 2.13 (CompareNat2) *)
 Theorem LessThan2_trans :
     forall n1 n2 n3 : peano,
     LessThan2 n1 n2 -> LessThan2 n2 n3 -> LessThan2 n1 n3.
 Proof.
 Admitted.
 
-(* Theorem 2.13 (CompareNat3 *)
+(* Theorem 2.13 (CompareNat3) *)
 Theorem LessThan3_trans :
     forall n1 n2 n3 : peano,
     LessThan3 n1 n2 -> LessThan3 n2 n3 -> LessThan3 n1 n3.
