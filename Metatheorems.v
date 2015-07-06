@@ -102,7 +102,44 @@ Theorem Plus_assoc :
     Plus n1 n2 n4 -> Plus n4 n3 n5 ->
     exists n6 : peano, Plus n2 n3 n6 /\ Plus n1 n6 n5.
 Proof.
-Admitted.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        intros n2 n3 n4 n5 H4 H5.
+        assert (exists n6, Plus n2 n3 n6) as H6 by apply Plus_close.
+        destruct H6 as [n6 H6].
+        exists n6.
+        split.
+        
+            (* Plus n2 n3 n6 *)
+            apply H6.
+        
+            (* Plus Z n6 n5 *)
+            inversion H4; subst.
+            assert (n5 = n6) as H56 by apply (Plus_uniq _ _ _ _ H5 H6).
+            subst.
+            apply P_Zero.
+    
+        (* Case : n1 = S n1' *)
+        intros n2 n3 n4 n5 H4 H5.
+        assert (exists n6, Plus n2 n3 n6) as H6 by apply Plus_close.
+        destruct H6 as [n6 H6].
+        exists n6.
+        split.
+        
+            (* Plus n2 n3 n6 *)
+            apply H6.
+        
+            (* Plus (S n1') n6 n5 *)
+            inversion H4 as [| A B n4' H4' E F G]; subst.
+            inversion H5 as [| A B n5' H5' E F G]; subst.
+            apply P_Succ.
+            specialize (H1 n2 n3 n4' n5' H4' H5').
+            destruct H1 as [n7 [H7 H1]].
+            assert (n6 = n7) by apply (Plus_uniq _ _ _ _ H6 H7).
+            subst.
+            apply H1.
+Qed.
 
 (* Theorem 2.6 *)
 Theorem Times_uniq :
