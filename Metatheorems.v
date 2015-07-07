@@ -145,7 +145,22 @@ Qed.
 Theorem Times_uniq :
     forall n1 n2 n3 n4 : peano, Times n1 n2 n3 -> Times n1 n2 n4 -> n3 = n4.
 Proof.
-Admitted.
+    intros n1 n2.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        intros n3 n4 H3 H4.
+        inversion H3; subst.
+        inversion H4; subst.
+        reflexivity.
+    
+        (* Case : n1 = S n1' *)
+        intros n3 n4 H3 H4.
+        inversion H3 as [| t1 t2 x t3 Hxt Hxp]; subst.
+        inversion H4 as [| t1 t2 y t3 Hyt Hyp]; subst.
+        assert (x = y) by apply (H1 _ _ Hxt Hyt); subst.
+        apply (Plus_uniq _ _ _ _ Hxp Hyp).
+Qed.
 
 (* Theorem 2.7 *)
 Theorem Times_close :
