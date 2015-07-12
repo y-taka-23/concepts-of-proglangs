@@ -202,11 +202,42 @@ Proof.
         apply P_Zero.
 Qed.
 
+Lemma T_Zero_r :
+    forall n : peano, Times n Z Z.
+Proof.
+    induction n as [| n' H].
+    
+        (* Case : n = Z *)
+        apply T_Zero.
+    
+        (* Case : n = S n' *)
+        apply (T_Succ _ _ Z _ H).
+        apply P_Zero.
+Qed.
+
+Lemma T_Succ_r :
+    forall n1 n2 n3 n4 : peano,
+    Times n1 n2 n3 -> Plus n1 n3 n4 -> Times n1 (S n2) n4.
+Proof.
+Admitted.
+
 (* Theorem 2.9 *)
 Theorem Times_comm :
     forall n1 n2 n3 : peano, Times n1 n2 n3 -> Times n2 n1 n3.
 Proof.
-Admitted.
+    induction n1 as [| n1' H1].
+    
+        (* Case : n1 = Z *)
+        intros n2 n3 H.
+        inversion H; subst.
+        apply T_Zero_r.
+    
+        (* Case : n1 = S n' *)
+        intros n2 n3 H.
+        inversion H as [| t1 t2 x t3 Hxt Hxp]; subst.
+        assert (Times n2 n1' x) as Hxt' by apply (H1 _ _ Hxt).
+        apply (T_Succ_r _ _ x _ Hxt' Hxp).
+Qed.
 
 (* Theorem 2.10 *)
 Theorem Times_assoc :
