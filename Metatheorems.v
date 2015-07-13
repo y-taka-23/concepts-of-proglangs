@@ -366,7 +366,30 @@ Qed.
 Theorem EvalTo_uniq :
     forall (e : Exp) (n1 n2 : peano), EvalTo e n1 -> EvalTo e n2 -> n1 = n2.
 Proof.
-Admitted.
+    induction e as [n | e1 He1 e2 He2 | e1 He1 e2 He2].
+    
+        (* Case : e = ENum n *)
+        intros n1 n2 H1 H2.
+        inversion H1; subst.
+        inversion H2; subst.
+        reflexivity.
+    
+        (* Case : e = EPlus e1 e2 *)
+        intros n1 n2 H1 H2.
+        inversion H1 as [| t1 t2 n11' n12' H H11' H12' H1' |]; subst.
+        inversion H2 as [| t1 t2 n21' n22' H H21' H22' H2' |]; subst.
+        assert (n11' = n21') by apply  (He1 _ _ H11' H21'); subst.
+        assert (n12' = n22') by apply  (He2 _ _ H12' H22'); subst.
+        apply (Plus_uniq _ _ _ _ H1' H2').
+    
+        (* Case : e = ETimes e1 e2 *)
+        intros n1 n2 H1 H2.
+        inversion H1 as [| | t1 t2 n11' n12' H H11' H12' H1']; subst.
+        inversion H2 as [| | t1 t2 n21' n22' H H21' H22' H2']; subst.
+        assert (n11' = n21') by apply  (He1 _ _ H11' H21'); subst.
+        assert (n12' = n22') by apply  (He2 _ _ H12' H22'); subst.
+        apply (Times_uniq _ _ _ _ H1' H2').
+Qed.
 
 (* Theorem 2.17 *)
 Theorem EPlus_comm :
