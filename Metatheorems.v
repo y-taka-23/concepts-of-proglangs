@@ -452,7 +452,29 @@ Admitted.
 Theorem DetReduceTo_ReduceTo :
     forall e e' : Exp, DetReduceTo e e' -> ReduceTo e e'.
 Proof.
-Admitted.
+    intros e e' H.
+    induction H as [n1 n2 n3 H | n1 n2 n3 H |
+                    e1 e1' e2 _ H' | e1 e2 e2' _ H' |
+                    e1 e1' e2 _ H' | e1 e2 e2' _ H'].
+    
+        (* Case : e = EPlus (ENum n1) (ENum n2) *)
+        apply (R_Plus _ _ _ H).
+    
+        (* Case : e = ETimes (ENum n1) (ENum n2) *)
+        apply (R_Times _ _ _ H).
+    
+        (* Case : DetReduceTo e1 e1', e = EPlus e1 e2 *)
+        apply (R_PlusL _ _ _ H').
+    
+        (* Case : DetReduceTo e2 e2', e = EPlus e1 e2 *)
+        apply (R_PlusR _ _ _ H').
+    
+        (* Case : DetReduceTo e1 e1', e = ETimes e1 e2 *)
+        apply (R_TimesL _ _ _ H').
+    
+        (* Case : DetReduceTo e2 e2', e = ETimes e1 e2 *)
+        apply (R_TimesR _ _ _ H').
+Qed.
 
 (* Theorem 2.25 *)
 Theorem ReduceTo_weak_normal :
