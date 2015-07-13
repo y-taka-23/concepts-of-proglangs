@@ -396,7 +396,11 @@ Theorem EPlus_comm :
     forall (e1 e2 : Exp) (n : peano),
     EvalTo (EPlus e1 e2) n -> EvalTo (EPlus e2 e1) n.
 Proof.
-Admitted.
+    intros e1 e2 n H.
+    inversion H as [| t1 t2 n1 n2 t3 H1 H2 Hp t4 |]; subst.
+    assert (Plus n2 n1 n) as Hp' by apply  (Plus_comm _ _ _  Hp).
+    apply (E_Plus _ _ _ _ _ H2 H1 Hp').
+Qed.
 
 (* Theorem 2.18 *)
 Theorem EPlus_assoc :
