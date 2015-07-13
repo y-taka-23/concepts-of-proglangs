@@ -444,7 +444,7 @@ Admitted.
 
 (* Theorem 2.23 *)
 Theorem DetReduceTo_uniq :
-    forall e e' e'' : Exp, ReduceTo e e' -> ReduceTo e e'' -> e' = e''.
+    forall e e' e'' : Exp, DetReduceTo e e' -> DetReduceTo e e'' -> e' = e''.
 Proof.
 Admitted.
 
