@@ -432,7 +432,55 @@ Theorem ReduceTo_progress :
     forall e : Exp,
     (exists n : peano, e = ENum n) \/ (exists e' : Exp, ReduceTo e e').
 Proof.
-Admitted.
+    induction e as [p | e1 H1 e2 H2 | e1 H1 e2 H2].
+    
+        (* Case : e = ENum p *)
+        left.
+        exists p.
+        reflexivity.
+    
+        (* Case : e = EPlus e1 e2 *)
+        right.
+        destruct H1 as [[n1 H1] | [e1' H1]].
+        
+            (* Case : e1 = Enum n1 *)
+            destruct H2 as [[n2 H2] | [e2' H2]]; subst.
+            
+                (* Case : e2 = ENum n2 *)
+                assert (exists n, Plus n1 n2 n) as H by apply Plus_close.
+                destruct H as [n H].
+                exists (ENum n).
+                apply (R_Plus _ _ _ H).
+            
+                (* Case : ReduceTo e2 e2' *)
+                exists (EPlus (ENum n1) e2').
+                apply (R_PlusR _ _ _ H2).
+        
+            (* Case : ReduceTo e1 e1' *)
+            exists (EPlus e1' e2).
+            apply (R_PlusL _ _ _ H1).
+    
+        (* Case : e = ETimes e1 e2 *)
+        right.
+        destruct H1 as [[n1 H1] | [e1' H1]].
+        
+            (* Case : e1 = Enum n1 *)
+            destruct H2 as [[n2 H2] | [e2' H2]]; subst.
+            
+                (* Case : e2 = ENum n2 *)
+                assert (exists n, Times n1 n2 n) as H by apply Times_close.
+                destruct H as [n H].
+                exists (ENum n).
+                apply (R_Times _ _ _ H).
+            
+                (* Case : ReduceTo e2 e2' *)
+                exists (ETimes (ENum n1) e2').
+                apply (R_TimesR _ _ _ H2).
+        
+            (* Case : ReduceTo e1 e1' *)
+            exists (ETimes e1' e2).
+            apply (R_TimesL _ _ _ H1).
+Qed.
 
 (* Theorem 2.22 *)
 Theorem ReduceTo_confl :
