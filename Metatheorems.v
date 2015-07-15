@@ -482,7 +482,7 @@ Proof.
             apply (R_TimesL _ _ _ H1).
 Qed.
 
-(* Theorem 2.22 *)
+(* Theorem 2.22 (incorrect?) *)
 Theorem ReduceTo_confl :
     forall e1 e2 e3 : Exp,
     ReduceTo e1 e2 -> ReduceTo e1 e3 ->
