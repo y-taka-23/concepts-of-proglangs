@@ -209,5 +209,176 @@ Inductive Error : Exp -> Prop :=
     | E_LtErrorL    : forall e1 e2 : Exp, Error e1 -> Error (ELt e1 e2)
     | E_LtErrorR    : forall e1 e2 : Exp, Error e2 -> Error (ELt e1 e2).
 
+(* Theorem 3.4 *)
+Theorem EvalTo_Error_total :
+    forall e : Exp, (exists v : Value, EvalTo e v) \/ Error e.
+Proof.
+    induction e as [ v | e1 He1 e2 He2 e3 He3 |
+                    e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
+                    e1 He1 e2 He2 ].
+
+        (* Case : f = EValue v *)
+        left.
+        exists v.
+        induction v as [i | b].
+
+            (* Case : v = VInt i *)
+            apply E_Int.
+
+            (* Case : v = VBool b *)
+            apply E_Bool.
+
+        (* Case : f = EIf e1 e2 e3 *)
+        destruct He1 as [[[i | [|]] He1] | He1].
+
+            (* Case : EvalTo e1 (VInt i) *)
+            right.
+            apply (E_IfInt _ _ _ _ He1).
+
+            (* Case : EvalTo e1 (VBool true) *)
+            destruct He2 as [[v He2] | He2].
+
+                (* Case : EvalTo e2 v *)
+                left.
+                exists v.
+                apply (E_IfT _ _ _ _ He1 He2).
+
+                (* Case : Error e2 *)
+                right.
+                apply (E_IfTError _ _ _ He1 He2).
+
+            (* Case : EvalTo e1 (VBool false) *)
+            destruct He3 as [[v He3] | He3].
+
+                (* Case : EvalTo e3 v *)
+                left.
+                exists v.
+                apply (E_IfF _ _ _ _ He1 He3).
+
+                (* Case : Error e3 *)
+                right.
+                apply (E_IfFError _ _ _ He1 He3).
+
+            (* Case : Error e1 *)
+            right.
+            apply (E_IfError _ _ _ He1).
+
+        (* Case : f = EPlus e1 e2 *)
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 + i2)).
+                apply (E_Plus _ _ _ _ _  He1 He2).
+                apply B_Plus.
+                reflexivity.
+
+                (* Case : EvalTo e2 (VBool b2) *)
+                right.
+                apply (E_PlusBoolR _ _ _ He2).
+
+                (* Case : Error e2 *)
+                right.
+                apply (E_PlusErrorR _ _ He2).
+
+            (* Case : EvalTo e1 (VBool b1) *)
+            right.
+            apply (E_PlusBoolL _ _ _ He1).
+
+            (* Case : Error e1 *)
+            right.
+            apply (E_PlusErrorL _ _ He1).
+
+        (* Case : f = EMinux e1 e2 *)
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 - i2)).
+                apply (E_Minus _ _ _ _ _  He1 He2).
+                apply B_Minus.
+                reflexivity.
+
+                (* Case : EvalTo e2 (VBool b2) *)
+                right.
+                apply (E_MinusBoolR _ _ _ He2).
+
+                (* Case : Error e2 *)
+                right.
+                apply (E_MinusErrorR _ _ He2).
+
+            (* Case : EvalTo e1 (VBool b1) *)
+            right.
+            apply (E_MinusBoolL _ _ _ He1).
+
+            (* Case : Error e1 *)
+            right.
+            apply (E_MinusErrorL _ _ He1).
+
+        (* Case : f = ETimes e1 e2 *)
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 * i2)).
+                apply (E_Times _ _ _ _ _  He1 He2).
+                apply B_Times.
+                reflexivity.
+
+                (* Case : EvalTo e2 (VBool b2) *)
+                right.
+                apply (E_TimesBoolR _ _ _ He2).
+
+                (* Case : Error e2 *)
+                right.
+                apply (E_TimesErrorR _ _ He2).
+
+            (* Case : EvalTo e1 (VBool b1) *)
+            right.
+            apply (E_TimesBoolL _ _ _ He1).
+
+            (* Case : Error e1 *)
+            right.
+            apply (E_TimesErrorL _ _ He1).
+
+        (* Case : f = ELt e1 e2 *)
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo e2 (VInt i2) *)
+                left.
+                exists (VBool (i1 <? i2)).
+                apply (E_Lt _ _ _ _ _  He1 He2).
+                apply B_Lt.
+                reflexivity.
+
+                (* Case : EvalTo e2 (VBool b2) *)
+                right.
+                apply (E_LtBoolR _ _ _ He2).
+
+                (* Case : Error e2 *)
+                right.
+                apply (E_LtErrorR _ _ He2).
+
+            (* Case : EvalTo e1 (VBool b1) *)
+            right.
+            apply (E_LtBoolL _ _ _ He1).
+
+            (* Case : Error e1 *)
+            right.
+            apply (E_LtErrorL _ _ He1).
+Qed.
+
 End IntegersAndBooleans.
 
