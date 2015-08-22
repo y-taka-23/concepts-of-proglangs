@@ -26,6 +26,26 @@ Inductive Times : Z -> Z -> Z -> Prop :=
 Inductive Lt : Z -> Z -> bool -> Prop := 
     | B_Lt : forall (i1 i2 : Z) (b3 : bool), b3 = (i1 <? i2) -> Lt i1 i2 b3.
 
+Lemma Plus_uniq :
+    forall i1 i2 i3 i4 : Z, Plus i1 i2 i3 -> Plus i1 i2 i4 -> i3 = i4.
+Proof.
+Admitted.
+
+Lemma Minus_uniq :
+    forall i1 i2 i3 i4 : Z, Minus i1 i2 i3 -> Minus i1 i2 i4 -> i3 = i4.
+Proof.
+Admitted.
+
+Lemma Times_uniq :
+    forall i1 i2 i3 i4 : Z, Times i1 i2 i3 -> Times i1 i2 i4 -> i3 = i4.
+Proof.
+Admitted.
+
+Lemma Lt_uniq :
+    forall (i1 i2 : Z) (b1 b2 : bool), Lt i1 i2 b1 -> Lt i1 i2 b2 -> b1 = b2.
+Proof.
+Admitted.
+
 (* Definition at p.56 *)
 Inductive EvalTo : Exp -> Value -> Prop :=
     | E_Int   : forall i : Z, EvalTo (EValue (VInt i)) (VInt i)
@@ -53,7 +73,88 @@ Inductive EvalTo : Exp -> Value -> Prop :=
 Theorem EvalTo_uniq :
     forall (e : Exp) (v1 v2 : Value), EvalTo e v1 -> EvalTo e v2 -> v1 = v2.
 Proof.
-Admitted.
+    induction e as [ v | e1 He1 e2 He2 e3 He3 |
+                    e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
+                    e1 He1 e2 He2 ].
+
+        (* Case : e = EValue v *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+
+            (* Case : v1 = VInt i *)
+            inversion H2; subst.
+            reflexivity.
+
+            (* Case : v1 = VBool b *)
+            inversion H2; subst.
+            reflexivity.
+
+        (* Case : f = EIf e1 e2 e3 *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+
+            (* Case : v1 = VBool true *)
+            inversion H2; subst.
+
+                (* Case : v2 = VBool true *)
+                apply (He2 _ _ H6 H8).
+
+                (* Case : v2 = VBool true *)
+                discriminate (He1 _ _ H5 H7).
+
+            (* Case : v1 = VBool false *)
+            inversion H2; subst.
+
+                (* Case : v2 = VBool true *)
+                discriminate (He1 _ _ H5 H7).
+
+                (* Case : v2 = VBool false *)
+                apply (He3 _ _ H6 H8).
+
+        (* Case : f1 = EPlus e1 e2 *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ H3 H5).
+        inversion Hi1; subst; clear Hi1.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ H4 H7).
+        inversion Hi2; subst; clear Hi2.
+        assert (i3 = i5) by apply (Plus_uniq _ _ _ _ H6 H9); subst.
+        reflexivity.
+
+        (* Case : f1 = EMinus e1 e2 *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ H3 H5).
+        inversion Hi1; subst; clear Hi1.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ H4 H7).
+        inversion Hi2; subst; clear Hi2.
+        assert (i3 = i5) by apply (Minus_uniq _ _ _ _ H6 H9); subst.
+        reflexivity.
+
+        (* Case : f1 = ETimes e1 e2 *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ H3 H5).
+        inversion Hi1; subst; clear Hi1.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ H4 H7).
+        inversion Hi2; subst; clear Hi2.
+        assert (i3 = i5) by apply (Times_uniq _ _ _ _ H6 H9); subst.
+        reflexivity.
+
+        (* Case : f1 = ELt e1 e2 *)
+        intros v1 v2 H1 H2.
+        inversion H1; subst.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ H3 H5).
+        inversion Hi1; subst; clear Hi1.
+        assert (VInt i2 = VInt i3) as Hi2 by apply (He2 _ _ H4 H7).
+        inversion Hi2; subst; clear Hi2.
+        assert (b3 = b0) by apply (Lt_uniq _ _ _ _ H6 H9); subst.
+        reflexivity.
+Qed.
 
 End IntegersAndBooleans.
 
