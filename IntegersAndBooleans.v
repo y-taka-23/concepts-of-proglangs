@@ -49,5 +49,11 @@ Inductive EvalTo : Exp -> Value -> Prop :=
                 EvalTo e1 (VInt i1) -> EvalTo e2 (VInt i2) -> Lt i1 i2 b3 ->
                 EvalTo (ELt e1 e2) (VBool b3).
 
+(* Theorem 3.2 *)
+Theorem EvalTo_uniq :
+    forall (e : Exp) (v1 v2 : Value), EvalTo e v1 -> EvalTo e v2 -> v1 = v2.
+Proof.
+Admitted.
+
 End IntegersAndBooleans.
 
