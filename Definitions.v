@@ -74,5 +74,41 @@ Inductive EvalTo : Env -> Exp -> Value -> Prop :=
                 EvalTo E e1 v1 -> EvalTo (ECons E x v1) e2 v ->
                 EvalTo E (ELet x e1 e2) v.
 
+(* Lemma 4.2 *)
+Lemma EvalTo_Var_uniq :
+    forall (E : Env) (x : Var) (v v' : Value),
+    EvalTo E (EVar x) v -> EvalTo E (EVar x) v' -> v = v'.
+Proof.
+    induction E as [| E0 H0 x0 v0].
+
+        (* Case : E = ENil *)
+        intros x v v' H H'.
+        inversion H.
+
+        (* Case : E = ECons E0 x0 v0 *)
+        intros x v v' H H'.
+        inversion H; subst.
+
+            (* Case : H is from E_Var1 *)
+            inversion H'; subst.
+
+                (* Case : H' is from E_Var1 *)
+                reflexivity.
+
+                (* Case : H' is from E_Var2 *)
+                contradict H6.
+                reflexivity.
+
+            (* Case : H' is from E_Var2 *)
+            inversion H'; subst.
+
+                (* Case : H' is from E_Var1 *)
+                contradict H6.
+                reflexivity.
+
+                (* Case : H' is from E_Var2 *)
+                apply (H0 _ _ _ H7 H9).
+Qed.
+
 End Definitions.
 
