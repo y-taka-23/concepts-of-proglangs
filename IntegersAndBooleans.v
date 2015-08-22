@@ -188,8 +188,12 @@ Inductive Error : Exp -> Prop :=
                       EvalTo e1 (VBool b) -> Error (ETimes e1 e2)
     | E_TimesBoolR  : forall (e1 e2 : Exp) (b : bool),
                       EvalTo e2 (VBool b) -> Error (ETimes e1 e2)
-    | E_IfError     : forall e1 e2 e3 :
-                      Exp, Error e1 -> Error (EIf e1 e2 e3)
+    | E_LtBoolL     : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e1 (VBool b) -> Error (ELt e1 e2)
+    | E_LtBoolR     : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e2 (VBool b) -> Error (ELt e1 e2)
+    | E_IfError     : forall e1 e2 e3 : Exp,
+                      Error e1 -> Error (EIf e1 e2 e3)
     | E_IfTError    : forall e1 e2 e3 : Exp,
                       EvalTo e1 (VBool true) -> Error e2 ->
                       Error (EIf e1 e2 e3)
