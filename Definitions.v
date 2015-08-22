@@ -9,7 +9,7 @@ Inductive Value : Set :=
 
 (* Variables at p.71 *)
 Inductive Var : Set :=
-    | var : nat -> Var.
+    | VId : nat -> Var.
 
 (* Environments at p.71 *)
 Inductive Env : Set :=
