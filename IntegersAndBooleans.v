@@ -29,22 +29,38 @@ Inductive Lt : Z -> Z -> bool -> Prop :=
 Lemma Plus_uniq :
     forall i1 i2 i3 i4 : Z, Plus i1 i2 i3 -> Plus i1 i2 i4 -> i3 = i4.
 Proof.
-Admitted.
+    intros i1 i2 i3 i4 H3 H4.
+    inversion H3; subst.
+    inversion H4; subst.
+    reflexivity.
+Qed.
 
 Lemma Minus_uniq :
     forall i1 i2 i3 i4 : Z, Minus i1 i2 i3 -> Minus i1 i2 i4 -> i3 = i4.
 Proof.
-Admitted.
+    intros i1 i2 i3 i4 H3 H4.
+    inversion H3; subst.
+    inversion H4; subst.
+    reflexivity.
+Qed.
 
 Lemma Times_uniq :
     forall i1 i2 i3 i4 : Z, Times i1 i2 i3 -> Times i1 i2 i4 -> i3 = i4.
 Proof.
-Admitted.
+    intros i1 i2 i3 i4 H3 H4.
+    inversion H3; subst.
+    inversion H4; subst.
+    reflexivity.
+Qed.
 
 Lemma Lt_uniq :
     forall (i1 i2 : Z) (b1 b2 : bool), Lt i1 i2 b1 -> Lt i1 i2 b2 -> b1 = b2.
 Proof.
-Admitted.
+    intros i1 i2 i3 i4 H3 H4.
+    inversion H3; subst.
+    inversion H4; subst.
+    reflexivity.
+Qed.
 
 (* Definition at p.56 *)
 Inductive EvalTo : Exp -> Value -> Prop :=
