@@ -172,5 +172,38 @@ Proof.
         reflexivity.
 Qed.
 
+(* Fig. 3.1 and 3.2 *)
+Inductive Error : Exp -> Prop :=
+    | E_IfInt       : forall (e1 e2 e3 : Exp) (i : Z),
+                      EvalTo e1 (VInt i) -> Error (EIf e1 e2 e3)
+    | E_PlusBoolL   : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e1 (VBool b) -> Error (EPlus e1 e2)
+    | E_PlusBoolR   : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e2 (VBool b) -> Error (EPlus e1 e2)
+    | E_MinusBoolL  : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e1 (VBool b) -> Error (EMinus e1 e2)
+    | E_MinusBoolR  : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e2 (VBool b) -> Error (EMinus e1 e2)
+    | E_TimesBoolL  : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e1 (VBool b) -> Error (ETimes e1 e2)
+    | E_TimesBoolR  : forall (e1 e2 : Exp) (b : bool),
+                      EvalTo e2 (VBool b) -> Error (ETimes e1 e2)
+    | E_IfError     : forall e1 e2 e3 :
+                      Exp, Error e1 -> Error (EIf e1 e2 e3)
+    | E_IfTError    : forall e1 e2 e3 : Exp,
+                      EvalTo e1 (VBool true) -> Error e2 ->
+                      Error (EIf e1 e2 e3)
+    | E_IfFError    : forall e1 e2 e3 : Exp,
+                      EvalTo e1 (VBool false) -> Error e3 ->
+                      Error (EIf e1 e2 e3)
+    | E_PlusErrorL  : forall e1 e2 : Exp, Error e1 -> Error (EPlus e1 e2)
+    | E_PlusErrorR  : forall e1 e2 : Exp, Error e2 -> Error (EPlus e1 e2)
+    | E_MinusErrorL : forall e1 e2 : Exp, Error e1 -> Error (EMinus e1 e2)
+    | E_MinusErrorR : forall e1 e2 : Exp, Error e2 -> Error (EMinus e1 e2)
+    | E_TimesErrorL : forall e1 e2 : Exp, Error e1 -> Error (ETimes e1 e2)
+    | E_TimesErrorR : forall e1 e2 : Exp, Error e2 -> Error (ETimes e1 e2)
+    | E_LtErrorL    : forall e1 e2 : Exp, Error e1 -> Error (ELt e1 e2)
+    | E_LtErrorR    : forall e1 e2 : Exp, Error e2 -> Error (ELt e1 e2).
+
 End IntegersAndBooleans.
 
