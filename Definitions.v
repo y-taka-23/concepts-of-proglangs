@@ -247,5 +247,42 @@ Proof.
         apply (He2 _ _ _ H7 H9).
 Qed.
 
+(* Free variables at p.72 *)
+Inductive is_FV : Exp -> Var -> Prop :=
+    | FV_Var     : forall x : Var, is_FV (EVar x) x
+    | FV_Plus_l  : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EPlus e1 e2) x
+    | FV_Plus_r  : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EPlus e1 e2) x
+    | FV_Minus_l : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EMinus e1 e2) x
+    | FV_Minus_r : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EMinus e1 e2) x
+    | FV_Times_l : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (ETimes e1 e2) x
+    | FV_Times_r : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (ETimes e1 e2) x
+    | FV_Lt_l    : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (ELt e1 e2) x
+    | FV_Lt_r    : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (ELt e1 e2) x
+    | FV_If      : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EIf e1 e2 e3) x
+    | FV_IfT     : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EIf e1 e2 e3) x
+    | FV_IfF     : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e3 x -> is_FV (EIf e1 e2 e3) x
+    | FV_Let1    : forall (e1 e2 : Exp) (x y : Var),
+                   is_FV e1 x -> is_FV (ELet y e1 e2) x
+    | FV_Let2    : forall (e1 e2 : Exp) (x y : Var),
+                   is_FV e2 x -> x <> y -> is_FV (ELet y e1 e2) x.
+
+(* Domains at p.73 *)
+Inductive in_dom : Env -> Var -> Prop :=
+    | Dom_ECons1 : forall (E : Env) (x : Var) (v : Value),
+                   in_dom (ECons E x v) x
+    | Dom_ECons2 : forall (E : Env) (x y : Var) (v : Value),
+                   in_dom E x -> in_dom (ECons E y v) x.
+
 End Definitions.
 
