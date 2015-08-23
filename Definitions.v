@@ -11,6 +11,12 @@ Inductive Value : Set :=
 Inductive Var : Set :=
     | VId : nat -> Var.
 
+(* Decidability of Var *)
+Lemma Var_eq_dec :
+    forall x y : Var, {x = y} + {x <> y}.
+Proof.
+Admitted.
+
 (* Environments at p.71 *)
 Inductive Env : Set :=
     | ENil  : Env 
@@ -340,6 +346,92 @@ Theorem EvalTo_Error_total :
     (forall x : Var, is_FV e x -> in_dom E x) ->
     (exists v : Value, EvalTo E e v) \/ Error E e.
 Proof.
+    intros E e H.
+    induction e as [[i | b] | x | e1 He1 e2 He2 | | | | |].
+
+        (* Case : e = VInt i *)
+        left.
+        exists (VInt i).
+        apply E_Int.
+
+        (* Case : e = VBool b *)
+        left.
+        exists (VBool b).
+        apply E_Bool.
+
+        (* Case : e = EVar x *)
+        specialize (H x (FV_Var _)).
+        induction H as [E0 x v | E0 x y v H0 H].
+
+            (* Case : E = ECons E0 x v *)
+            left.
+            exists v.
+            apply E_Var1.
+
+            (* Case : in_dom E0 x *)
+            destruct (Var_eq_dec x y) as [D | D].
+
+                (* Case : x = y *)
+                subst.
+                left.
+                exists v.
+                apply E_Var1.
+
+                (* Case : x <> y *)
+                destruct H as [[v' H] | H].
+
+                    (* Case : EvalTo E0 (EVar x) v' *)
+                    left.
+                    exists v'.
+                    apply (E_Var2 E0 _ _ _ _ D H).
+
+                    (* Case : Error E0 (EVar x) *)
+                    inversion H.
+
+        (* Case : e = EPlus e1 e2 *)
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Plus_l _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e2 x -> in_dom E x) as HFV2.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Plus_r _ _ _ Hx).
+
+        specialize (He1 HFV1); clear HFV1.
+        specialize (He2 HFV2); clear HFV2.
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo E e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo E e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 + i2)).
+                apply (E_Plus _ _ _ (EValue (VInt (i1 + i2))) _ _ _ He1 He2).
+                apply B_Plus.
+                reflexivity.
+
+                (* Case : EvalTo E e2 (VBool b2) *)
+                right.
+                apply (E_PlusBoolR _ _ _ _ He2).
+
+                (* Case : Error E e2 *)
+                right.
+                apply (E_PlusErrorR _ _ _ He2).
+
+            (* Case : EvalTo E e1 (VBool b1) *)
+            right.
+            apply (E_PlusBoolL _ _ _ _ He1).
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_PlusErrorL _ _ _ He1).
 Admitted.
 
 End Definitions.
