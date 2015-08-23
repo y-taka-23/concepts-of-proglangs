@@ -284,5 +284,63 @@ Inductive in_dom : Env -> Var -> Prop :=
     | Dom_ECons2 : forall (E : Env) (x y : Var) (v : Value),
                    in_dom E x -> in_dom (ECons E y v) x.
 
+(* Errors at p.75 *)
+Inductive Error : Env -> Exp -> Prop :=
+    | E_IfInt       : forall (E : Env) (e1 e2 e3 : Exp) (i : Z),
+                      EvalTo E e1 (VInt i) -> Error E (EIf e1 e2 e3)
+    | E_PlusBoolL   : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e1 (VBool b) -> Error E (EPlus e1 e2)
+    | E_PlusBoolR   : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e2 (VBool b) -> Error E (EPlus e1 e2)
+    | E_MinusBoolL  : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e1 (VBool b) -> Error E (EMinus e1 e2)
+    | E_MinusBoolR  : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e2 (VBool b) -> Error E (EMinus e1 e2)
+    | E_TimesBoolL  : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e1 (VBool b) -> Error E (ETimes e1 e2)
+    | E_TimesBoolR  : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e2 (VBool b) -> Error E (ETimes e1 e2)
+    | E_LtBoolL     : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e1 (VBool b) -> Error E (ELt e1 e2)
+    | E_LtBoolR     : forall (E : Env) (e1 e2 : Exp) (b : bool),
+                      EvalTo E e2 (VBool b) -> Error E (ELt e1 e2)
+    | E_IfError     : forall (E : Env) (e1 e2 e3 : Exp),
+                      Error E e1 -> Error E (EIf e1 e2 e3)
+    | E_IfTError    : forall (E : Env) (e1 e2 e3 : Exp),
+                      EvalTo E e1 (VBool true) -> Error E e2 ->
+                      Error E (EIf e1 e2 e3)
+    | E_IfFError    : forall (E : Env) (e1 e2 e3 : Exp),
+                      EvalTo E e1 (VBool false) -> Error E e3 ->
+                      Error E (EIf e1 e2 e3)
+    | E_PlusErrorL  : forall (E : Env) (e1 e2 : Exp),
+                      Error E e1 -> Error E (EPlus e1 e2)
+    | E_PlusErrorR  : forall (E : Env) (e1 e2 : Exp),
+                      Error E e2 -> Error E (EPlus e1 e2)
+    | E_MinusErrorL : forall (E : Env) (e1 e2 : Exp),
+                      Error E e1 -> Error E (EMinus e1 e2)
+    | E_MinusErrorR : forall (E : Env) (e1 e2 : Exp),
+                      Error E e2 -> Error E (EMinus e1 e2)
+    | E_TimesErrorL : forall (E : Env) (e1 e2 : Exp),
+                      Error E e1 -> Error E (ETimes e1 e2)
+    | E_TimesErrorR : forall (E : Env) (e1 e2 : Exp),
+                      Error E e2 -> Error E (ETimes e1 e2)
+    | E_LtErrorL    : forall (E : Env) (e1 e2 : Exp),
+                      Error E e1 -> Error E (ELt e1 e2)
+    | E_LtErrorR    : forall (E : Env) (e1 e2 : Exp),
+                      Error E e2 -> Error E (ELt e1 e2)
+    | E_LetError1   : forall (E : Env) (x : Var) (e1 e2 : Exp),
+                      Error E e1 -> Error E (ELet x e1 e2)
+    | E_LetError2   : forall (E : Env) (x : Var) (v : Value) (e1 e2 : Exp),
+                      EvalTo E e1 v -> Error (ECons E x v) e2 ->
+                      Error E (ELet x e1 e2).
+
+(* Theorem 4.3 *)
+Theorem EvalTo_Error_total :
+    forall (E : Env) (e : Exp),
+    (forall x : Var, is_FV e x -> in_dom E x) ->
+    (exists v : Value, EvalTo E e v) \/ Error E e.
+Proof.
+Admitted.
+
 End Definitions.
 
