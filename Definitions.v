@@ -346,20 +346,26 @@ Theorem EvalTo_Error_total :
     (forall x : Var, is_FV e x -> in_dom E x) ->
     (exists v : Value, EvalTo E e v) \/ Error E e.
 Proof.
-    intros E e H.
-    induction e as [[i | b] | x | e1 He1 e2 He2 | | | | |].
+    intros E e.
+    generalize dependent E.
+    induction e as [[i | b] | x |
+                    e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
+                    e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2].
 
         (* Case : e = VInt i *)
+        intros E H.
         left.
         exists (VInt i).
         apply E_Int.
 
         (* Case : e = VBool b *)
+        intros E H.
         left.
         exists (VBool b).
         apply E_Bool.
 
         (* Case : e = EVar x *)
+        intros E H.
         specialize (H x (FV_Var _)).
         induction H as [E0 x v | E0 x y v H0 H].
 
@@ -389,6 +395,7 @@ Proof.
                     inversion H.
 
         (* Case : e = EPlus e1 e2 *)
+        intros E H.
         assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
 
             (* Proof of the assertion *)
@@ -403,8 +410,8 @@ Proof.
             apply H.
             apply (FV_Plus_r _ _ _ Hx).
 
-        specialize (He1 HFV1); clear HFV1.
-        specialize (He2 HFV2); clear HFV2.
+        specialize (He1 E HFV1); clear HFV1.
+        specialize (He2 E HFV2); clear HFV2.
         destruct He1 as [[[i1 | b1] He1] | He1].
 
             (* Case : EvalTo E e1 (VInt i1) *)
@@ -432,7 +439,224 @@ Proof.
             (* Case : Error E e1 *)
             right.
             apply (E_PlusErrorL _ _ _ He1).
-Admitted.
+
+        (* Case : e = EMinus e1 e2 *)
+        intros E H.
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Minus_l _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e2 x -> in_dom E x) as HFV2.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Minus_r _ _ _ Hx).
+
+        specialize (He1 E HFV1); clear HFV1.
+        specialize (He2 E HFV2); clear HFV2.
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo E e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo E e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 - i2)).
+                apply (E_Minus _ _ _ (EValue (VInt (i1 - i2))) _ _ _ He1 He2).
+                apply B_Minus.
+                reflexivity.
+
+                (* Case : EvalTo E e2 (VBool b2) *)
+                right.
+                apply (E_MinusBoolR _ _ _ _ He2).
+
+                (* Case : Error E e2 *)
+                right.
+                apply (E_MinusErrorR _ _ _ He2).
+
+            (* Case : EvalTo E e1 (VBool b1) *)
+            right.
+            apply (E_MinusBoolL _ _ _ _ He1).
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_MinusErrorL _ _ _ He1).
+
+        (* Case : e = ETimes e1 e2 *)
+        intros E H.
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Times_l _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e2 x -> in_dom E x) as HFV2.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Times_r _ _ _ Hx).
+
+        specialize (He1 E HFV1); clear HFV1.
+        specialize (He2 E HFV2); clear HFV2.
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo E e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo E e2 (VInt i2) *)
+                left.
+                exists (VInt (i1 * i2)).
+                apply (E_Times _ _ _ (EValue (VInt (i1 * i2))) _ _ _ He1 He2).
+                apply B_Times.
+                reflexivity.
+
+                (* Case : EvalTo E e2 (VBool b2) *)
+                right.
+                apply (E_TimesBoolR _ _ _ _ He2).
+
+                (* Case : Error E e2 *)
+                right.
+                apply (E_TimesErrorR _ _ _ He2).
+
+            (* Case : EvalTo E e1 (VBool b1) *)
+            right.
+            apply (E_TimesBoolL _ _ _ _ He1).
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_TimesErrorL _ _ _ He1).
+
+        (* Case : e = ELt e1 e2 *)
+        intros E H.
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Lt_l _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e2 x -> in_dom E x) as HFV2.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_Lt_r _ _ _ Hx).
+
+        specialize (He1 E HFV1); clear HFV1.
+        specialize (He2 E HFV2); clear HFV2.
+        destruct He1 as [[[i1 | b1] He1] | He1].
+
+            (* Case : EvalTo E e1 (VInt i1) *)
+            destruct He2 as [[[i2 | b2] He2] | He2].
+
+                (* Case : EvalTo E e2 (VInt i2) *)
+                left.
+                exists (VBool (i1 <? i2)).
+                apply (E_Lt _ _ _ _ _ _ He1 He2).
+                apply B_Lt.
+                reflexivity.
+
+                (* Case : EvalTo E e2 (VBool b2) *)
+                right.
+                apply (E_LtBoolR _ _ _ _ He2).
+
+                (* Case : Error E e2 *)
+                right.
+                apply (E_LtErrorR _ _ _ He2).
+
+            (* Case : EvalTo E e1 (VBool b1) *)
+            right.
+            apply (E_LtBoolL _ _ _ _ He1).
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_LtErrorL _ _ _ He1).
+
+        (* Case : e = EIf e1 e2 e3 *)
+        intros E H.
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_If _ _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e2 x -> in_dom E x) as HFV2.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_IfT _ _ _ _ Hx).
+
+        assert (forall x : Var, is_FV e3 x -> in_dom E x) as HFV3.
+
+            (* Proof of the assertion *)
+            intros x Hx.
+            apply H.
+            apply (FV_IfF _ _ _ _ Hx).
+
+        specialize (He1 E HFV1); clear HFV1.
+        specialize (He2 E HFV2); clear HFV2.
+        specialize (He3 E HFV3); clear HFV3.
+        destruct He1 as [[[i | [|]] He1]| He1].
+
+            (* Case : EvalTo E e1 (VInt i) *)
+            right.
+            apply (E_IfInt _ _ _ _ _ He1).
+
+            (* Case : EvalTo E e1 (VBool true *)
+            destruct He2 as [[v He2] | He2].
+
+                (* Case : EvalTo E e2 v *)
+                left.
+                exists v.
+                apply (E_IfT _ _ _ _ _ He1 He2).
+
+                (* Case : Error E e2 *)
+                right. Print E_IfTError.
+                apply (E_IfTError _ _ _ _ He1 He2).
+
+            (* Case : EvalTo E e1 (VBool false) *)
+            destruct He3 as [[v He3] | He3].
+
+                (* Case : EvalTo E e3 v *)
+                left.
+                exists v.
+                apply (E_IfF _ _ _ _ _ He1 He3).
+
+                (* Case : Error E e3 *)
+                right.
+                apply (E_IfFError _ _ _ _ He1 He3).
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_IfError _ _ _ _ He1).
+
+        (* Case : e = ELet v e1 e2 *)
+        intros E H.
+        assert (forall x : Var, is_FV e1 x -> in_dom E x) as HFV1.
+
+            (* Proof of the assertion *)
+            intros x0 Hx0.
+            apply H.
+            apply (FV_Let1 _ _ _ _ Hx0).
+
+        specialize (He1 E HFV1); clear HFV1.
+        destruct He1 as [[v He1] | He1].
+
+            (* Case : EvalTo E e1 v *)
+            admit.
+
+            (* Case : Error E e1 *)
+            right.
+            apply (E_LetError1 _ _ _ _ He1).
+Qed.
 
 End Definitions.
 
