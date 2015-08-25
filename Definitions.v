@@ -15,7 +15,23 @@ Inductive Var : Set :=
 Lemma Var_eq_dec :
     forall x y : Var, {x = y} + {x <> y}.
 Proof.
-Admitted.
+    intros x y.
+    destruct x as [i].
+    destruct y as [j].
+    destruct (eq_nat_dec i j) as [D | D].
+
+        (* Case : i = j *)
+        left.
+        subst.
+        reflexivity.
+
+        (* Case : i <> j *)
+        right.
+        intro H.
+        apply D.
+        inversion H as [H'].
+        reflexivity.
+Qed.
 
 (* Environments at p.71 *)
 Inductive Env : Set :=
@@ -651,7 +667,33 @@ Proof.
         destruct He1 as [[v He1] | He1].
 
             (* Case : EvalTo E e1 v *)
-            admit.
+            assert (forall x0 : Var,
+                    is_FV e2 x0 -> in_dom (ECons E x v) x0) as HFV2.
+
+                (* Proof of the assertion *)
+                intros y Hy.
+                destruct (Var_eq_dec y x) as [D | D].
+
+                    (* Case : y = x *)
+                    subst.
+                    apply Dom_ECons1.
+
+                    (* Case : y <> x *)
+                    apply Dom_ECons2.
+                    apply H.
+                    apply (FV_Let2 _ _ _ _ Hy D).
+
+                specialize (He2 (ECons E x v) HFV2); clear HFV2.
+                destruct He2 as [[v' He2]| He2].
+
+                    (* Case : EvalTo (ECons E x v) e2 v' *)
+                    left.
+                    exists v'.
+                    apply (E_Let _ _ _ _ _ _ He1 He2).
+
+                    (* Case : Error (ECons E x v) e2 *)
+                    right.
+                    apply (E_LetError2 _ _ _ _ _ He1 He2).
 
             (* Case : Error E e1 *)
             right.
