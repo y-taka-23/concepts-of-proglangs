@@ -161,6 +161,12 @@ Proof.
                 apply (H0 _ _ _ H7 H9).
 Qed.
 
+Lemma EvalTo_App_uniq :
+    forall (E : Env) (e1 e2 : Exp) (v v' : Value),
+    EvalTo E (EApp e1 e2) v -> EvalTo E (EApp e1 e2) v' -> v = v'.
+Proof.
+Admitted.
+
 (* Theorem 5.2 *)
 Theorem EvalTo_uniq :
     forall (E : Env) (e : Exp) (v v' : Value),
@@ -277,7 +283,8 @@ Proof.
         reflexivity.
 
         (* Case : e = EApp e1 e2 *)
-        admit.
+        intros E v1 v2 H1 H2.
+        apply (EvalTo_App_uniq _ _ _ _ _ H1 H2).
 
         (* Case : e = ELetRec x y e1 e2 *)
         intros E v1 v2 H1 H2.
