@@ -267,7 +267,7 @@ Proof.
         intros E v1 v2 H1 H2.
         inversion H1; subst.
         inversion H2; subst.
-        assert (v0 = v3) by apply (He1 _ _ _ H6 H8) ; subst.
+        assert (v0 = v3) by apply (He1 _ _ _ H6 H8); subst.
         apply (He2 _ _ _ H7 H9).
 
         (* Case : e = EFun x e *)
