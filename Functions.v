@@ -176,7 +176,7 @@ Proof.
     generalize dependent E.
     induction e as [[i | b | E' x e' | E' x y e'] | x |
                     e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
-                    e1 He1 e2 He2 |  e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
+                    e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
                     x e He | e1 He1 e2 He2 | x y e1 He1 e2 He2].
 
         (* Case : e = EValue (VInt i) *)
