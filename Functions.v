@@ -313,5 +313,15 @@ Proof.
         apply (He2 _ _ _ H7 H8).
 Qed.
 
+(* Theorem 5.3 *)
+Theorem non_terminating :
+    forall (v : Value) (f x : Var),
+    ~ EvalTo ENil
+             (ELetRec f x (EApp (EVar f) (EVar x))
+                      (EApp (EVar f) (EValue (VInt 2))))
+             v.
+Proof.
+Admitted.
+
 End Functions.
 
