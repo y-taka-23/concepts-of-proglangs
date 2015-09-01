@@ -166,151 +166,158 @@ Theorem EvalTo_uniq :
     forall (E : Env) (e : Exp) (v v' : Value),
     EvalTo E e v -> EvalTo E e v' -> v = v'.
 Proof.
-    intros E e.
-    generalize dependent E.
-    induction e as [[i | b | E' x e' | E' x y e'] | x |
-                    e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
-                    e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
-                    x e He | e1 He1 e2 He2 | x y e1 He1 e2 He2].
+    intros E e v1 v2 H1.
+    generalize dependent v2.
+    induction H1 as [i | b | x v | E x y v v' Hy H' H |
+                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hp |
+                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hm |
+                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Ht |
+                     E e1 e2 i1 i2 b He1 He1' He2 He2' Hl |
+                     E e1 e2 e3 v' He1 He1' He2 He2' |
+                     E e1 e2 e3 v' He1 He1' He3 He3' |
+                     E e1 e2 x v0 v He1 He1' He2 He2'| E x e |
+                     E E2 e1 e2 e0 x v v' He1 He1' He2 He2' He0 He0' |
+                     E x y e1 e2 v He1 He1' |
+                     E E2 e1 e2 e0 x y v v' He1 He1' He2 He2' He0 He0'].
 
-        (* Case : e = EValue (VInt i) *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+        (* Case : H1 is from E_Int *)
+        intros v2 H2.
         inversion H2; subst.
         reflexivity.
 
-        (* Case : e = EValue (VBool b) *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+        (* Case : H1 is from E_Bool *)
+        intros v2 H2.
         inversion H2; subst.
         reflexivity.
 
-        (* Case : e = EValue (VFun E' x e') *)
-        intros E v1 v2 H1 H2.
-        inversion H1.
-
-        (* Case : e = EValue (VRecFun E' x y e') *)
-        intros E v1 v2 H1 H2.
-        inversion H1.
-
-        (* Case : e = EVar x *)
-        intros E v1 v2 H1 H2.
-        apply (EvalTo_Var_uniq _ _ _ _ H1 H2).
-
-        (* Case : e = EPlus e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+        (* Case : H1 is from E_Var1 *)
+        intros v2 H2.
         inversion H2; subst.
-        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ _ H3 H4).
-        inversion Hi1; subst; clear Hi1.
-        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ _ H5 H8).
-        inversion Hi2; subst; clear Hi2.
-        assert (i3 = i5) by apply (Plus_uniq _ _ _ _ H7 H10); subst.
+
+            (* Case : H2 is from E_Var1 *)
+            reflexivity.
+
+            (* Case : H2 is from E_Var2 *)
+            contradict H5.
+            reflexivity.
+
+        (* Case : H1 is from E_Var2 *)
+        intros v2 H2.
+        inversion H2; subst.
+
+            (* Case : H2 is from E_Var1 *)
+            contradict Hy.
+            reflexivity.
+
+            (* Case : H2 is from E_Var2 *)
+            apply (H v2 H7).
+
+        (* Case : H1 is from E_Plus *)
+        intros v2 H2.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1' _ H1).
+        inversion Hi1; subst.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2' _ H4).
+        inversion Hi2; subst.
+        apply f_equal.
+        apply (Plus_uniq _ _ _ _ Hp H6).
+
+        (* Case : H1 is from E_Minus *)
+        intros v2 H2.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1' _ H1).
+        inversion Hi1; subst.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2' _ H4).
+        inversion Hi2; subst.
+        apply f_equal.
+        apply (Minus_uniq _ _ _ _ Hm H6).
+
+        (* Case : H1 is from E_Times *)
+        intros v2 H2.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1' _ H1).
+        inversion Hi1; subst.
+        assert (VInt i2 = VInt i4) as Hi2 by apply (He2' _ H4).
+        inversion Hi2; subst.
+        apply f_equal.
+        apply (Times_uniq _ _ _ _ Ht H6).
+
+        (* Case : H1 is from E_Lt *)
+        intros v2 H2.
+        inversion H2; subst.
+        assert (VInt i1 = VInt i0) as Hi1 by apply (He1' _ H1).
+        inversion Hi1; subst.
+        assert (VInt i2 = VInt i3) as Hi2 by apply (He2' _ H4).
+        inversion Hi2; subst.
+        apply f_equal.
+        apply (Lt_uniq _ _ _ _ Hl H6).
+
+        (* Case : H1 is from E_IfT *)
+        intros v2 H2.
+        inversion H2; subst.
+
+            (* Case : H2 is from E_IfT *)
+            apply (He2' _ H6).
+
+            (* Case : H2 is from E_IfF *)
+            specialize (He1' _ H5).
+            discriminate.
+
+        (* Case : H1 is from E_IfF *)
+        intros v2 H2.
+        inversion H2; subst.
+
+            (* Case : H2 is from E_IfT *)
+            specialize (He1' _ H5).
+            discriminate.
+
+            (* Case : H2 is from E_IfF *)
+            apply (He3' _ H6).
+
+        (* Case : H1 is from E_Let *)
+        intros v2 H2.
+        inversion H2; subst.
+        apply He2'.
+        assert (v0 = v1) by apply (He1' _ H5); subst.
+        apply H6.
+
+        (* Case : H1 is from E_Fun *)
+        intros v2 H2.
+        inversion H2; subst.
         reflexivity.
 
-        (* Case : e = EMinus e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+        (* Case : H1 is from E_App *)
+        intros v2 H2.
         inversion H2; subst.
-        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ _ H3 H4).
-        inversion Hi1; subst; clear Hi1.
-        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ _ H5 H8).
-        inversion Hi2; subst; clear Hi2.
-        assert (i3 = i5) by apply (Minus_uniq _ _ _ _ H7 H10); subst.
-        reflexivity.
 
-        (* Case : e = ETimes e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+            (* Case : H2 is from E_App *)
+            specialize (He1' _ H1).
+            inversion He1'; subst.
+            specialize (He2' _ H4); subst.
+            apply (He0' _ H6).
+
+            (* Case : H2 is from E_AppRec *)
+            specialize (He1' _ H1).
+            inversion He1'.
+
+        (* Case : H1 is from E_LetRec *)
+        intros v2 H2.
         inversion H2; subst.
-        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ _ H3 H4).
-        inversion Hi1; subst; clear Hi1.
-        assert (VInt i2 = VInt i4) as Hi2 by apply (He2 _ _ _ H5 H8).
-        inversion Hi2; subst; clear Hi2.
-        assert (i3 = i5) by apply (Times_uniq _ _ _ _ H7 H10); subst.
-        reflexivity.
+        apply (He1' _ H6).
 
-        (* Case : e = ELt e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+        (* Case : H1 is from E_AppRec *)
+        intros v2 H2.
         inversion H2; subst.
-        assert (VInt i1 = VInt i0) as Hi1 by apply (He1 _ _ _ H3 H4).
-        inversion Hi1; subst; clear Hi1.
-        assert (VInt i2 = VInt i3) as Hi2 by apply (He2 _ _ _ H5 H8).
-        inversion Hi2; subst; clear Hi2.
-        assert (b3 = b0) by apply (Lt_uniq _ _ _ _ H7 H10); subst.
-        reflexivity.
 
-        (* Case : e = EIf e1 e2 e3 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
+            (* Case : H2 is from E_App *)
+            specialize (He1' _ H1).
+            inversion He1'.
 
-            (* Case : EvalTo e1 (VBool true) *)
-            inversion H2; subst.
-
-                (* Case : EvalTo e2 (VBool true) *)
-                apply (He2 _ _ _ H7 H9).
-
-                (* Case : EvalTo e2 (VBool false) *)
-                discriminate (He1 _ _ _ H6 H8).
-
-            (* Case : EvalTo e1 (VBool false) *)
-            inversion H2; subst.
-
-                (* Case : EvalTo e2 (VBool true) *)
-                discriminate (He1 _ _ _ H6 H8).
-
-                (* Case : EvalTo e2 (VBool false) *)
-                apply (He3 _ _ _ H7 H9).
-
-        (* Case : e = ELet x e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
-        inversion H2; subst.
-        assert (v0 = v3) by apply (He1 _ _ _ H6 H8); subst.
-        apply (He2 _ _ _ H7 H9).
-
-        (* Case : e = EFun x e *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
-        inversion H2; subst.
-        reflexivity.
-
-        (* Case : e = EApp e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
-
-            (* Case : H1 is from E_App *)
-            inversion H2; subst.
-
-                (* Case : H2 is from E_App *)
-                specialize (He1 _ _ _ H3 H4).
-                inversion He1; subst.
-                specialize (He2 _ _ _ H5 H8); subst.
-                admit.
-
-                (* Case : H2 is from E_AppRec *)
-                specialize (He1 _ _ _ H3 H4).
-                discriminate.
-
-            (* Case : H1 is from E_AppRec *)
-            inversion H2; subst.
-
-                (* Case : H2 is from E_App *)
-                specialize (He1 _ _ _ H3 H4).
-                discriminate.
-
-                (* Case : H2 is from E_AppRec *)
-                specialize (He1 _ _ _ H3 H4).
-                inversion He1; subst.
-                specialize (He2 _ _ _ H5 H8); subst.
-                admit.
-
-        (* Case : e = ELetRec x y e1 e2 *)
-        intros E v1 v2 H1 H2.
-        inversion H1; subst.
-        inversion H2; subst.
-        apply (He2 _ _ _ H7 H8).
+            (* Case : H2 is from E_AppRec *)
+            specialize (He1' _ H1).
+            inversion He1'; subst.
+            specialize (He2' _ H4); subst.
+            apply (He0' _ H6).
 Qed.
 
 (* Theorem 5.3 *)
