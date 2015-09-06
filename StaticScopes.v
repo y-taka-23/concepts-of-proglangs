@@ -157,7 +157,178 @@ Theorem EvalTo_DBEvalTo_compat :
     TransEnvTo E X V -> TransTo X e d -> EvalTo E e v ->
     exists w : DBValue, (DBEvalTo V d w /\ TransValTo v w).
 Proof.
-Admitted.
+    intros E X V e d v Htre Htr He.
+    generalize dependent d.
+    generalize dependent V.
+    generalize dependent X.
+    induction He as [ E i | E b | E x v | E x y v1 v2 Hneq Hv2 Hx |
+                      E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hp |
+                      E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hm |
+                      E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Ht |
+                      E e1 e2 i1 i2 b3 He1 He1' He2 He2' Hl |
+                      E e1 e2 e3 v2 He1 He1' He2 He2' |
+                      E e1 e2 e3 v2 He1 He1' He3 He3' |
+                      E e1 e2 x v1 v He1 He1' He2 He2' | E x e |
+                      E E2 e1 e2 e0 x v v' He1 He1' He2 He2' He0 He0' |
+                      E x y e1 e2 v He2 He2' |
+                      E E2 e1 e2 e0 x y v v' He1 He1' He2 He2' He0 He0' ].
+
+        (* Case : He is from E_Int *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        exists (DBVInt i).
+        apply (conj (DBE_Int _ _) (Trv_Int _)).
+
+        (* Case : He is from E_Bool *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        exists (DBVBool b).
+        apply (conj (DBE_Bool _ _) (Trv_Bool _)).
+
+        (* Case : He if from E_Var1 *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+
+            (* Case : Htr is from Tr_Var1 *)
+            inversion Htre; subst.
+            exists w.
+            apply (conj (DBE_Var _ _ _ (NV_O _ _)) H5).
+
+            (* Case : Htr is from Tr_Var2 *)
+            inversion Htre; subst.
+            contradict H0.
+            reflexivity.
+
+        (* Case : He is from E_Var2 *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+
+            (* Case : Htr is from Tr_Var1 *)
+            inversion Htre; subst.
+            contradict Hneq.
+            reflexivity.
+
+            (* Case : Htr is from Tr_Var2 *)
+            admit.
+
+        (* Case : He is from E_Plus *)
+        intros X V Htre d Htr.
+        exists (DBVInt i3).
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        inversion He2'; subst.
+        apply (conj (DBE_Plus _ _ _ (DBEPlus d1 d2) _ _ _ Hw1 Hw2 Hp)
+                    (Trv_Int _)).
+
+        (* Case : He is from E_Minus *)
+        intros X V Htre d Htr.
+        exists (DBVInt i3).
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        inversion He2'; subst.
+        apply (conj (DBE_Minus _ _ _ (DBEMinus d1 d2) _ _ _ Hw1 Hw2 Hm)
+                    (Trv_Int _)).
+
+        (* Case : He is from E_Times *)
+        intros X V Htre d Htr.
+        exists (DBVInt i3).
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        inversion He2'; subst.
+        apply (conj (DBE_Times _ _ _ (DBETimes d1 d2) _ _ _ Hw1 Hw2 Ht)
+                    (Trv_Int _)).
+
+        (* Case : He is from E_Lt *)
+        intros X V Htre d Htr.
+        exists (DBVBool b3).
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        inversion He2'; subst.
+        apply (conj (DBE_Lt _ _ _ (DBELt d1 d2) _ _ _ Hw1 Hw2 Hl)
+                    (Trv_Bool _)).
+
+        (* Case : He is from E_IfT *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H3).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H5).
+        destruct He2' as [w2 [Hw2 He2']].
+        exists w2.
+        apply (conj (DBE_IfT _ _ _ _ _ Hw1 Hw2) He2').
+
+        (* Case : He is from E_IfF *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H3).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He3' _ _ Htre d3 H6).
+        destruct He3' as [w3 [Hw3 He3']].
+        exists w3.
+        apply (conj (DBE_IfF _ _ _ _ _ Hw1 Hw3) He3').
+
+        (* Case : He is from E_Let *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H4).
+        destruct He1' as [w1 [Hw1 He1']].
+        specialize (He2' _ _ (Tre_Bind _ _ _ _ _ _ Htre He1') d2 H5).
+        destruct He2' as [w2 [Hw2 He2']].
+        exists w2.
+        apply (conj (DBE_Let _ _ _ _ _ Hw1 Hw2) He2').
+
+        (* Case : He is from E_Fun *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        exists (DBVFun V d0).
+        apply (conj (DBE_Fun _ _) ((Trv_Fun _ _ _ _ _ _ Htre H3))).
+
+        (* Case : He is from E_App *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre d1 H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre d2 H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        specialize (He0' _ _ (Tre_Bind _ _ _ _ _ _ H5 He2') d H6).
+        destruct He0' as [w0 [Hw0 He0']].
+        exists w0.
+        apply (conj (DBE_App _ V0 _ _ d _ w2 Hw1 Hw2 Hw0) He0').
+
+        (* Case : He is from E_LetRec *)
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        assert (TransEnvTo (ECons E x (VRecFun E x y e1))
+                           (VLCons X x) (DBVLCons V (DBVRecFun V d1))) as Hd1
+            by apply (Tre_Bind _ _ _ _ _ _
+                               Htre (Trv_Rec _ X _ _ _ _ _ Htre H5)).
+        specialize (He2' _ _ Hd1 _ H6).
+        destruct He2' as [w2 [Hw2 He2']].
+        exists w2.
+        apply (conj (DBE_LetRec _ _ _ _ Hw2) He2').
+
+        (* Case : He is from E_AppRec *)
+        admit.
+Qed.
 
 (* Theorem 6.1 (2) *)
 Theorem DBEvalTo_EvalTo_compat :
