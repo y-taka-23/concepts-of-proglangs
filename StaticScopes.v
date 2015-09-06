@@ -58,8 +58,10 @@ Inductive TransTo : VarList -> Exp -> DBExp -> Prop :=
                   y <> x -> TransTo X (EVar x) (DBEVar n1) ->
                   TransTo (VLCons X y) (EVar x) (DBEVar (S n1))
     | Tr_Let    : forall (X : VarList) (x : Var) (e1 e2 : Exp) (d1 d2 : DBExp),
+                  TransTo X e1 d1 -> TransTo (VLCons X x) e2 d2 ->
                   TransTo X (ELet x e1 e2) (DBELet d1 d2)
     | Tr_Fun    : forall (X : VarList) (x : Var) (e : Exp) (d : DBExp),
+                  TransTo (VLCons X x) e d ->
                   TransTo X (EFun x e) (DBEFun d)
     | Tr_App    : forall (X : VarList) (e1 e2 : Exp) (d1 d2 : DBExp),
                   TransTo X e1 d1 -> TransTo X e2 d2 ->
@@ -72,7 +74,8 @@ Inductive TransTo : VarList -> Exp -> DBExp -> Prop :=
 
 (* V[n] = w of at p.100 *)
 Inductive nth_val : DBValueList -> nat -> DBValue -> Prop :=
-    | NV_O : forall w : DBValue, nth_val (DBVLCons DBVLNil w) O w
+    | NV_O : forall (V : DBValueList) (w : DBValue),
+             nth_val (DBVLCons V w) O w
     | NV_S : forall (V : DBValueList) (n : nat) (w w0 : DBValue),
              nth_val V n w ->
              nth_val (DBVLCons V w0) (S n) w.
@@ -124,7 +127,7 @@ Inductive DBEvalTo : DBValueList -> DBExp -> DBValue -> Prop :=
                    DBEvalTo V (DBELetRec d1 d2) w
     | DBE_AppRec : forall (V V2 : DBValueList) (d1 d2 d0 : DBExp)
                           (w w2 : DBValue),
-                   DBEvalTo V d2 (DBVRecFun V2 d0) -> DBEvalTo V d2 w2 ->
+                   DBEvalTo V d1 (DBVRecFun V2 d0) -> DBEvalTo V d2 w2 ->
                    DBEvalTo (DBVLCons (DBVLCons V2 (DBVRecFun V2 d0)) w2) d0 w ->
                    DBEvalTo V (DBEApp d1 d2) w.
 
