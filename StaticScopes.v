@@ -209,7 +209,12 @@ Proof.
             reflexivity.
 
             (* Case : Htr is from Tr_Var2 *)
-            admit.
+            inversion Htre; subst.
+            specialize (Hx _ _ H7 _ H2).
+            destruct Hx as [w' [Hw' Hx]].
+            exists w'.
+            inversion Hw'; subst.
+            apply (conj (DBE_Var _ _ _ (NV_S _ _ _ _ H3)) Hx).
 
         (* Case : He is from E_Plus *)
         intros X V Htre d Htr.
