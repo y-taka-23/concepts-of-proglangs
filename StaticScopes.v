@@ -342,6 +342,105 @@ Theorem DBEvalTo_EvalTo_compat :
     TransEnvTo E X V -> TransTo X e d -> DBEvalTo V d w ->
     exists v : Value, (EvalTo E e v /\ TransValTo v w).
 Proof.
+    intros E X V e d w Htre Htr Hd.
+    generalize dependent e.
+    generalize dependent X.
+    generalize dependent E.
+    induction Hd as [ V i | V b |
+                      V d1 d2 d3 w Hd1 Hd1' Hd2 Hd2' |
+                      V d1 d2 d3 w Hd1 Hd1' Hd3 Hd3' |
+                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hp |
+                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hm |
+                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Ht |
+                      V d1 d2 d3 i1 i2 b3 Hd1 Hd1' Hd2 Hd2' Hl |
+                      | | | | |].
+
+        (* Case : Hd is from DBE_Int *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        exists (VInt i).
+        apply (conj (E_Int _ _) (Trv_Int _)).
+
+        (* Case : Hd is from DBE_Bool *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        exists (VBool b).
+        apply (conj (E_Bool _ _) (Trv_Bool _)).
+
+        (* Case : Hd is from DBE_IfT *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H4).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H5).
+        destruct Hd2' as [v2 [Hv2 Hd2']].
+        exists v2.
+        apply (conj (E_IfT _ _ _ _ _ Hv1 Hv2) Hd2').
+
+        (* Case : Hd is from DBE_IfF *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H4).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd3' _ _ Htre _ H6).
+        destruct Hd3' as [v3 [Hv3 Hd3']].
+        exists v3.
+        apply (conj (E_IfF _ _ _ _ _ Hv1 Hv3) Hd3').
+
+        (* Case : Hd is from DBE_Plus *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H4).
+        destruct Hd2' as [v1 [Hv2 Hd2']].
+        inversion Hd2'; subst.
+        exists (VInt i3).
+        apply (conj (E_Plus _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Hp)
+                    (Trv_Int _)).
+
+        (* Case : Hd is from DBE_Minus *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H4).
+        destruct Hd2' as [v1 [Hv2 Hd2']].
+        inversion Hd2'; subst.
+        exists (VInt i3).
+        apply (conj (E_Minus _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Hm)
+                    (Trv_Int _)).
+
+        (* Case : Hd is from DBE_Times *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H4).
+        destruct Hd2' as [v1 [Hv2 Hd2']].
+        inversion Hd2'; subst.
+        exists (VInt i3).
+        apply (conj (E_Times _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Ht)
+                    (Trv_Int _)).
+
+        (* Case : Hd is from DBE_Lt *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H4).
+        destruct Hd2' as [v1 [Hv2 Hd2']].
+        inversion Hd2'; subst.
+        exists (VBool b3).
+        apply (conj (E_Lt _ _ _ _ _ b3 Hv1 Hv2 Hl)
+                    (Trv_Bool _)).
+
 Admitted.
 
 End StaticScopes.
