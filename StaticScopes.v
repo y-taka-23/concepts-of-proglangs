@@ -353,7 +353,9 @@ Proof.
                       V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hm |
                       V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Ht |
                       V d1 d2 d3 i1 i2 b3 Hd1 Hd1' Hd2 Hd2' Hl |
-                      | | | | |].
+                      V n w Hw | V d1 d2 w w1 Hd1 Hd1' Hd2 Hd2' | V d |
+                      V V2 d1 d2 d0 w w2 Hd1 Hd1' Hd2 Hd2' Hd0 Hd0' |
+                      |].
 
         (* Case : Hd is from DBE_Int *)
         intros E X Htre e Htr.
@@ -440,6 +442,25 @@ Proof.
         exists (VBool b3).
         apply (conj (E_Lt _ _ _ _ _ b3 Hv1 Hv2 Hl)
                     (Trv_Bool _)).
+
+        (* Case : Hd is from DBE_Var *)
+        admit.
+
+        (* Case : Hd is from DBE_Let *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        specialize (Hd2' _ _ (Tre_Bind _ _ _ _ _ _ Htre Hd1') _ H4).
+        destruct Hd2' as [v2 [Hv2 Hd2']].
+        exists v2.
+        apply (conj (E_Let _ _ _ _ _ _ Hv1 Hv2) Hd2').
+
+        (* Case : Hd is from DBE_Fun *)
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        exists (VFun E x e0).
+        apply (conj (E_Fun _ _ _) (Trv_Fun _ _ _ _ _ _ Htre H2)).
 
 Admitted.
 
