@@ -490,6 +490,61 @@ Proof.
         admit.
 Qed.
 
+(* Free variables (omitted in the text) *)
+Inductive is_FV : Exp -> Var -> Prop :=
+    | FV_Var     : forall x : Var, is_FV (EVar x) x
+    | FV_Plus_l  : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EPlus e1 e2) x
+    | FV_Plus_r  : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EPlus e1 e2) x
+    | FV_Minus_l : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EMinus e1 e2) x
+    | FV_Minus_r : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EMinus e1 e2) x
+    | FV_Times_l : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (ETimes e1 e2) x
+    | FV_Times_r : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (ETimes e1 e2) x
+    | FV_Lt_l    : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (ELt e1 e2) x
+    | FV_Lt_r    : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (ELt e1 e2) x
+    | FV_If      : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EIf e1 e2 e3) x
+    | FV_IfT     : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EIf e1 e2 e3) x
+    | FV_IfF     : forall (e1 e2 e3 : Exp) (x : Var),
+                   is_FV e3 x -> is_FV (EIf e1 e2 e3) x
+    | FV_Let1    : forall (e1 e2 : Exp) (x y : Var),
+                   is_FV e1 x -> is_FV (ELet y e1 e2) x
+    | FV_Let2    : forall (e1 e2 : Exp) (x y : Var),
+                   is_FV e2 x -> x <> y -> is_FV (ELet y e1 e2) x
+    | FV_Fun     : forall (e : Exp) (x y : Var),
+                   is_FV e x -> x <> y -> is_FV (EFun y e) x
+    | FV_App_l   : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e1 x -> is_FV (EApp e1 e2) x
+    | FV_App_r   : forall (e1 e2 : Exp) (x : Var),
+                   is_FV e2 x -> is_FV (EApp e1 e2) x
+    | FV_LetRec1 : forall (e1 e2 : Exp) (x y z : Var),
+                   is_FV e1 x -> is_FV (ELetRec y z e1 e2) x
+    | FV_LetRec2 : forall (e1 e2 : Exp) (x y z : Var),
+                   is_FV e2 x -> x <> y -> x <> z ->
+                   is_FV (ELetRec y z e1 e2) x.
+
+(* Contents of ValueList *)
+Inductive in_VL : VarList -> Var -> Prop :=
+    | VL_Cons1 : forall (X : VarList) (x : Var), in_VL (VLCons X x) x
+    | VL_Cons2 : forall (X : VarList) (x y : Var),
+                 in_VL X x -> in_VL (VLCons X y) x.
+
+(* Theorem 6.2 *)
+Theorem TransTo_total :
+    forall (X : VarList) (e : Exp),
+    (forall x : Var, is_FV e x -> in_VL X x) ->
+    exists d : DBExp, TransTo X e d.
+Proof.
+Admitted.
+
 (* Theorem 6.3 *)
 Theorem TransTo_uniq :
     forall (X : VarList) (e : Exp) (d1 d2 : DBExp),
