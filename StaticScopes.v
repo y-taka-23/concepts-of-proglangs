@@ -490,5 +490,143 @@ Proof.
         admit.
 Qed.
 
+(* Theorem 6.3 *)
+Theorem TransTo_uniq :
+    forall (X : VarList) (e : Exp) (d1 d2 : DBExp),
+    TransTo X e d1 -> TransTo X e d2 -> d1 = d2.
+Proof.
+    intros X e.
+    generalize dependent X.
+    induction e as [ [i | b | E x e0 | E x y e0] | x |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
+                     x e0 He0 | e1 He1 e2 He2 | x y e1 He1 e2 He2 ].
+
+        (* Case : e = EValue (VInt i) *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        reflexivity.
+
+        (* Case : e = EValue (VBool b) *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        reflexivity.
+
+        (* Case : e = EValue (VFun E x e0) *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1.
+
+        (* Case : e = EValue (VRecFun E x y e0) *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1.
+
+        (* Case : e = EVar x *)
+        induction X as [| X0 HX0 x0].
+
+            (* Case : X = VLNil *)
+            intros d1 d2 Hd1 Hd2.
+            inversion Hd1.
+
+            (* Case : X = VLCons X0 x0 *)
+            intros d1 d2 Hd1 Hd2.
+            inversion Hd1; subst.
+
+                (* Case : Hd1 is from Tr_Var1 *)
+                inversion Hd2; subst.
+
+                    (* Case : Hd2 is from Tr_Var1 *)
+                    reflexivity.
+
+                    (* Case : Hd2 is from Tr_Var2 *)
+                    contradict H2.
+                    reflexivity.
+
+                (* Case : Hd2 is from Tr_Var2 *)
+                inversion Hd2; subst.
+
+                    (* Case : Hd2 is from Tr_Var1 *)
+                    contradict H2.
+                    reflexivity.
+
+                    (* Case : Hd2 is from Tr_Var2 *)
+                    specialize (HX0 _ _ H4 H6).
+                    inversion HX0; subst.
+                    reflexivity.
+
+        (* Case : e = EPlus e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H2 H3); subst.
+        specialize (He2 _ _ _ H4 H6); subst.
+        reflexivity.
+
+        (* Case : e = EMinus e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H2 H3); subst.
+        specialize (He2 _ _ _ H4 H6); subst.
+        reflexivity.
+
+        (* Case : e = ETimes e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H2 H3); subst.
+        specialize (He2 _ _ _ H4 H6); subst.
+        reflexivity.
+
+        (* Case : e = ELt e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H2 H3); subst.
+        specialize (He2 _ _ _ H4 H6); subst.
+        reflexivity.
+
+        (* Case : e = EIf e1 e2 e3 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H3 H4); subst.
+        specialize (He2 _ _ _ H5 H8); subst.
+        specialize (He3 _ _ _ H6 H9); subst.
+        reflexivity.
+
+        (* Case : e = ELet x e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H4 H6); subst.
+        specialize (He2 _ _ _ H5 H7); subst.
+        reflexivity.
+
+        (* Case : e = EFun x e0 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He0 _ _ _ H3 H4); subst.
+        reflexivity.
+
+        (* Case : e = EApp e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H2 H3); subst.
+        specialize (He2 _ _ _ H4 H6); subst.
+        reflexivity.
+
+        (* Case : e = ELetRec x y e1 e2 *)
+        intros X d1 d2 Hd1 Hd2.
+        inversion Hd1; subst.
+        inversion Hd2; subst.
+        specialize (He1 _ _ _ H5 H7); subst.
+        specialize (He2 _ _ _ H6 H8); subst.
+        reflexivity.
+Qed.
+
 End StaticScopes.
 
