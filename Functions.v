@@ -80,9 +80,9 @@ Qed.
 (* Evaluations at p.84 and p.87 *)
 Inductive EvalTo : Env -> Exp -> Value -> Prop :=
     | E_Int    : forall (E : Env) (i : Z),
-                 EvalTo E (EValue (VInt i)) (VInt i)
+                 EvalTo E (EInt i) (VInt i)
     | E_Bool   : forall (E : Env) (b : bool),
-                 EvalTo E (EValue (VBool b)) (VBool b)
+                 EvalTo E (EBool b) (VBool b)
     | E_Var1   : forall (E : Env) (x : Var) (v : Value),
                  EvalTo (ECons E x v) (EVar x) v
     | E_Var2   : forall (E : Env) (x y : Var) (v1 v2 : Value),
@@ -328,7 +328,7 @@ Theorem non_terminating :
     forall (v : Value) (f x : Var),
     ~ EvalTo ENil
              (ELetRec f x (EApp (EVar f) (EVar x))
-                      (EApp (EVar f) (EValue (VInt 2))))
+                      (EApp (EVar f) (EInt 2)))
              v.
 Proof.
 Admitted.
