@@ -8,7 +8,8 @@ Inductive Var : Set :=
 
 (* Expressions at p.84 and p.87 *)
 Inductive Exp : Set :=
-    | EValue  : Value -> Exp
+    | EInt    : Z -> Exp
+    | EBool   : bool -> Exp
     | EVar    : Var -> Exp
     | EPlus   : Exp -> Exp -> Exp
     | EMinus  : Exp -> Exp -> Exp
@@ -18,8 +19,10 @@ Inductive Exp : Set :=
     | ELet    : Var -> Exp -> Exp -> Exp
     | EFun    : Var -> Exp -> Exp
     | EApp    : Exp -> Exp -> Exp
-    | ELetRec : Var -> Var -> Exp -> Exp -> Exp
-    with Value : Set :=
+    | ELetRec : Var -> Var -> Exp -> Exp -> Exp.
+
+(* Values and environments at p.84 and p.87 *)
+Inductive Value : Set :=
     | VInt    : Z -> Value
     | VBool   : bool -> Value
     | VFun    : Env -> Var -> Exp -> Value
