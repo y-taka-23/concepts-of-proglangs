@@ -405,7 +405,7 @@ Proof.
         destruct Hd2' as [v1 [Hv2 Hd2']].
         inversion Hd2'; subst.
         exists (VInt i3).
-        apply (conj (E_Plus _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Hp)
+        apply (conj (E_Plus _ _ _ (EInt i3) _ _ _ Hv1 Hv2 Hp)
                     (Trv_Int _)).
 
         (* Case : Hd is from DBE_Minus *)
@@ -418,7 +418,7 @@ Proof.
         destruct Hd2' as [v1 [Hv2 Hd2']].
         inversion Hd2'; subst.
         exists (VInt i3).
-        apply (conj (E_Minus _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Hm)
+        apply (conj (E_Minus _ _ _ (EInt i3) _ _ _ Hv1 Hv2 Hm)
                     (Trv_Int _)).
 
         (* Case : Hd is from DBE_Times *)
@@ -431,7 +431,7 @@ Proof.
         destruct Hd2' as [v1 [Hv2 Hd2']].
         inversion Hd2'; subst.
         exists (VInt i3).
-        apply (conj (E_Times _ _ _ (EValue (VInt i3)) _ _ _ Hv1 Hv2 Ht)
+        apply (conj (E_Times _ _ _ (EInt i3) _ _ _ Hv1 Hv2 Ht)
                     (Trv_Int _)).
 
         (* Case : Hd is from DBE_Lt *)
@@ -555,30 +555,22 @@ Theorem TransTo_uniq :
 Proof.
     intros X e.
     generalize dependent X.
-    induction e as [ [i | b | E x e0 | E x y e0] | x |
+    induction e as [ i | b | x |
                      e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
                      e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
                      x e0 He0 | e1 He1 e2 He2 | x y e1 He1 e2 He2 ].
 
-        (* Case : e = EValue (VInt i) *)
+        (* Case : e = EInt i *)
         intros X d1 d2 Hd1 Hd2.
         inversion Hd1; subst.
         inversion Hd2; subst.
         reflexivity.
 
-        (* Case : e = EValue (VBool b) *)
+        (* Case : e = EBool b *)
         intros X d1 d2 Hd1 Hd2.
         inversion Hd1; subst.
         inversion Hd2; subst.
         reflexivity.
-
-        (* Case : e = EValue (VFun E x e0) *)
-        intros X d1 d2 Hd1 Hd2.
-        inversion Hd1.
-
-        (* Case : e = EValue (VRecFun E x y e0) *)
-        intros X d1 d2 Hd1 Hd2.
-        inversion Hd1.
 
         (* Case : e = EVar x *)
         induction X as [| X0 HX0 x0].
