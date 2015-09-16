@@ -6,7 +6,8 @@ Open Scope Z_scope.
 (* Expressions with de Bruijn indices at p.97 and p.100 *)
 (* The indices are 0-besed, unlike the definition in the text *)
 Inductive DBExp : Set :=
-    | DBEValue  : DBValue -> DBExp
+    | DBEInt    : Z -> DBExp
+    | DBEBool   : bool -> DBExp
     | DBEVar    : nat -> DBExp
     | DBEPlus   : DBExp -> DBExp -> DBExp
     | DBEMinus  : DBExp -> DBExp -> DBExp
@@ -16,8 +17,10 @@ Inductive DBExp : Set :=
     | DBELet    : DBExp -> DBExp -> DBExp
     | DBEFun    : DBExp -> DBExp
     | DBEApp    : DBExp -> DBExp -> DBExp
-    | DBELetRec : DBExp -> DBExp -> DBExp
-    with DBValue : Set :=
+    | DBELetRec : DBExp -> DBExp -> DBExp.
+
+(* Values and environments *)
+Inductive DBValue : Set :=
     | DBVInt    : Z -> DBValue
     | DBVBool   : bool -> DBValue
     | DBVFun    : DBValueList -> DBExp -> DBValue
@@ -34,9 +37,9 @@ Inductive VarList : Set :=
 (* Fig 6.1, 6.2 *)
 Inductive TransTo : VarList -> Exp -> DBExp -> Prop :=
     | Tr_Int    : forall (X : VarList) (i : Z),
-                  TransTo X (EValue (VInt i)) (DBEValue (DBVInt i))
+                  TransTo X (EInt i) (DBEInt i)
     | Tr_Bool   : forall (X : VarList) (b : bool),
-                  TransTo X (EValue (VBool b)) (DBEValue (DBVBool b))
+                  TransTo X (EBool b) (DBEBool b)
     | Tr_If     : forall (X : VarList) (e1 e2 e3 : Exp) (d1 d2 d3 : DBExp),
                   TransTo X e1 d1 -> TransTo X e2 d2 -> TransTo X e3 d3 ->
                   TransTo X (EIf e1 e2 e3) (DBEIf d1 d2 d3)
@@ -83,9 +86,9 @@ Inductive nth_val : DBValueList -> nat -> DBValue -> Prop :=
 (* Fig 6.3, 6.4 *)
 Inductive DBEvalTo : DBValueList -> DBExp -> DBValue -> Prop :=
     | DBE_Int    : forall (V : DBValueList) (i : Z),
-                   DBEvalTo V (DBEValue (DBVInt i)) (DBVInt i)
+                   DBEvalTo V (DBEInt i) (DBVInt i)
     | DBE_Bool   : forall (V : DBValueList) (b : bool),
-                   DBEvalTo V (DBEValue (DBVBool b)) (DBVBool b)
+                   DBEvalTo V (DBEBool b) (DBVBool b)
     | DBE_IfT    : forall (V : DBValueList) (d1 d2 d3 : DBExp) (w : DBValue),
                    DBEvalTo V d1 (DBVBool true) -> DBEvalTo V d2 w ->
                    DBEvalTo V (DBEIf d1 d2 d3) w
