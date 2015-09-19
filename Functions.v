@@ -125,7 +125,7 @@ Inductive EvalTo : Env -> Exp -> Value -> Prop :=
     | E_AppRec : forall (E E2 : Env) (e1 e2 e0 : Exp) (x y : Var)
                         (v v2 : Value),
                  EvalTo E e1 (VRecFun E2 x y e0) -> EvalTo E e2 v2 ->
-                 EvalTo (ECons (ECons E2 x (VRecFun E2 x y e2)) y v2) e0 v ->
+                 EvalTo (ECons (ECons E2 x (VRecFun E2 x y e0)) y v2) e0 v ->
                  EvalTo E (EApp e1 e2) v.
 
 (* Lemma 4.2 (reused) *)
