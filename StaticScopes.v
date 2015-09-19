@@ -583,7 +583,49 @@ Proof.
         apply Tr_Bool.
 
         (* Case : e = EVar x *)
-        admit.
+        induction X as [| X0 HX0 x0 ].
+
+            (* Case : X = VLNil *)
+            intro HFV.
+            specialize (HFV x (FV_Var _)).
+            inversion HFV.
+
+            (* Case : X = VLCons X0 x0 *)
+            intro HFV.
+            specialize (HFV x (FV_Var _)).
+            destruct (Var_eq_dec x0 x) as [Heq | Hneq].
+
+                (* Case : x0 = x *)
+                subst.
+                exists (DBEVar 0).
+                apply Tr_Var1.
+
+                (* Case : x0 <> x *)
+                assert (exists d : DBExp, TransTo X0 (EVar x) d) as Hd.
+
+                    (* Proof of the assertion *)
+                    apply HX0.
+                    intros x1 Hx1.
+                    inversion HFV; subst.
+
+                        (* Case : HFV is from VL_Cons1 *)
+                        contradict Hneq.
+                        reflexivity.
+
+                        (* Case : HFV is from VL_Cons2 *)
+                        inversion Hx1; subst.
+                        apply H2.
+
+                destruct Hd as [d Hd].
+                inversion Hd; subst.
+
+                    (* Case : Hd is from Tr_Var1 *)
+                    exists (DBEVar 1).
+                    apply (Tr_Var2 _ _ _ _ Hneq Hd).
+
+                    (* Case : Hd is from Tr_Var2 *)
+                    exists (DBEVar (S (S n1))).
+                    apply (Tr_Var2 _ _ _ _ Hneq Hd).
 
         (* Case : e = EPlus e1 e2 *)
         intros X HFV.
