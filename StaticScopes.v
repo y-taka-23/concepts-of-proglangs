@@ -335,7 +335,25 @@ Proof.
         apply (conj (DBE_LetRec _ _ _ _ Hw2) He2').
 
         (* Case : He is from E_AppRec *)
-        admit.
+        intros X V Htre d Htr.
+        inversion Htr; subst.
+        specialize (He1' _ _ Htre _ H2).
+        destruct He1' as [w1 [Hw1 He1']].
+        inversion He1'; subst.
+        specialize (He2' _ _ Htre _ H4).
+        destruct He2' as [w2 [Hw2 He2']].
+        assert (TransEnvTo (ECons (ECons E2 x (VRecFun E2 x y e0)) y v')
+                           (VLCons (VLCons X0 x) y)
+                           (DBVLCons (DBVLCons V0 (DBVRecFun V0 d)) w2)) as Hd.
+
+            (* Proof of the assertion *)
+            refine (Tre_Bind _ _ _ _ _ _ _ He2').
+            apply (Tre_Bind _ _ _ _ _ _ H6 (Trv_Rec _ _ _ _ _ _ _ H6 H7)).
+
+        specialize (He0' _ _ Hd _ H7).
+        destruct He0' as [w0 [Hw0 He0']].
+        exists w0.
+        apply (conj (DBE_AppRec _ _ _ _ _ _ _ Hw1 Hw2 Hw0) He0').
 Qed.
 
 (* Theorem 6.1 (2) *)
