@@ -540,13 +540,265 @@ Inductive in_VL : VarList -> Var -> Prop :=
     | VL_Cons2 : forall (X : VarList) (x y : Var),
                  in_VL X x -> in_VL (VLCons X y) x.
 
+Lemma Var_eq_dec :
+    forall x y : Var, {x = y} + {x <> y}.
+Proof.
+    intros x y.
+    destruct x as [n1].
+    destruct y as [n2].
+    destruct (eq_nat_dec n1 n2).
+
+        (* Case : n1 = n2 *)
+        left.
+        subst; reflexivity.
+
+        (* Case : n1 <> n2 *)
+        right.
+        intro F.
+        inversion F.
+        contradiction.
+Qed.
+
 (* Theorem 6.2 *)
 Theorem TransTo_total :
     forall (X : VarList) (e : Exp),
     (forall x : Var, is_FV e x -> in_VL X x) ->
     exists d : DBExp, TransTo X e d.
 Proof.
-Admitted.
+    intros X e.
+    generalize dependent X.
+    induction e as [ i | b | x |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
+                     x e0 He0 | e1 He1 e2 He2 | x y e1 He1 e2 He2 ].
+
+        (* Case : e = EInt i *)
+        intros X HFV.
+        exists (DBEInt i).
+        apply Tr_Int.
+
+        (* Case : e = EBool b *)
+        intros X HFV.
+        exists (DBEBool b).
+        apply Tr_Bool.
+
+        (* Case : e = EVar x *)
+        admit.
+
+        (* Case : e = EPlus e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_Plus_l _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_Plus_r _ _ _ H2)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBEPlus d1 d2).
+        apply (Tr_Plus _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = EMinus e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_Minus_l _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_Minus_r _ _ _ H2)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBEMinus d1 d2).
+        apply (Tr_Minus _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = ETimes e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_Times_l _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_Times_r _ _ _ H2)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBETimes d1 d2).
+        apply (Tr_Times _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = ELt e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_Lt_l _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_Lt_r _ _ _ H2)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBELt d1 d2).
+        apply (Tr_Lt _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = EIf e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_If _ _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_IfT _ _ _ _ H2)).
+
+        assert (exists d : DBExp, TransTo X e3 d) as Hd3.
+
+            (* Proof of the assertion *)
+            apply He3.
+            intros x0 H3.
+            apply (HFV _ (FV_IfF _ _ _ _ H3)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        destruct Hd3 as [d3 Hd3].
+        exists (DBEIf d1 d2 d3).
+        apply (Tr_If _ _ _ _ _ _ _ Hd1 Hd2 Hd3).
+
+        (* Case : e = ELet e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_Let1 _ _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo (VLCons X x) e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            destruct (Var_eq_dec x0 x) as [Heq | Hneq].
+
+                (* Case : x0 = x *)
+                subst.
+                apply VL_Cons1.
+
+                (* Case : x0 <> x *)
+                apply VL_Cons2.
+                apply (HFV _ (FV_Let2 _ _ _ _ H2 Hneq)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBELet d1 d2).
+        apply (Tr_Let _ _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = EFun x e0 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo (VLCons X x) e0 d) as Hd0.
+
+            (* Proof of the assertion *)
+            apply He0.
+            intros x0 H0.
+            destruct (Var_eq_dec x0 x) as [Heq | Hneq].
+
+                (* Case : x0 = x *)
+                subst.
+                apply VL_Cons1.
+
+                (* Case : x0 <> x *)
+                apply VL_Cons2.
+                apply (HFV _ (FV_Fun _ _ _ H0 Hneq)).
+
+        destruct Hd0 as [d0 Hd0].
+        exists (DBEFun d0).
+        apply (Tr_Fun _ _ _ _ Hd0).
+
+        (* Case : e = EApp e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo X e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            apply (HFV _ (FV_App_l _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo X e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            apply (HFV _ (FV_App_r _ _ _ H2)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBEApp d1 d2).
+        apply (Tr_App _ _ _ _ _ Hd1 Hd2).
+
+        (* Case : e = ELetRec x y e1 e2 *)
+        intros X HFV.
+        assert (exists d : DBExp, TransTo (VLCons (VLCons X x) y) e1 d) as Hd1.
+
+            (* Proof of the assertion *)
+            apply He1.
+            intros x0 H1.
+            repeat apply VL_Cons2.
+            apply (HFV _ (FV_LetRec1 _ _ _ _ _ H1)).
+
+        assert (exists d : DBExp, TransTo (VLCons X x) e2 d) as Hd2.
+
+            (* Proof of the assertion *)
+            apply He2.
+            intros x0 H2.
+            destruct (Var_eq_dec x0 x) as [Heq | Hneq].
+
+                (* Case : x0 = x *)
+                subst.
+                apply VL_Cons1.
+
+                (* Case : x0 <> x *)
+                apply VL_Cons2.
+                apply (HFV _ (FV_LetRec2 _ _ _ _ _ H2 Hneq)).
+
+        destruct Hd1 as [d1 Hd1].
+        destruct Hd2 as [d2 Hd2].
+        exists (DBELetRec d1 d2).
+        apply (Tr_LetRec _ _ _ _ _ _ _ Hd1 Hd2).
+Qed.
 
 (* Theorem 6.3 *)
 Theorem TransTo_uniq :
