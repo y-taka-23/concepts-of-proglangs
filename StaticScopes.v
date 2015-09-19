@@ -509,7 +509,7 @@ Inductive is_FV : Exp -> Var -> Prop :=
     | FV_Times_r : forall (e1 e2 : Exp) (x : Var),
                    is_FV e2 x -> is_FV (ETimes e1 e2) x
     | FV_Lt_l    : forall (e1 e2 : Exp) (x : Var),
-                   is_FV e2 x -> is_FV (ELt e1 e2) x
+                   is_FV e1 x -> is_FV (ELt e1 e2) x
     | FV_Lt_r    : forall (e1 e2 : Exp) (x : Var),
                    is_FV e2 x -> is_FV (ELt e1 e2) x
     | FV_If      : forall (e1 e2 e3 : Exp) (x : Var),
@@ -531,7 +531,7 @@ Inductive is_FV : Exp -> Var -> Prop :=
     | FV_LetRec1 : forall (e1 e2 : Exp) (x y z : Var),
                    is_FV e1 x -> is_FV (ELetRec y z e1 e2) x
     | FV_LetRec2 : forall (e1 e2 : Exp) (x y z : Var),
-                   is_FV e2 x -> x <> y -> x <> z ->
+                   is_FV e2 x -> x <> y ->
                    is_FV (ELetRec y z e1 e2) x.
 
 (* Contents of ValueList *)
