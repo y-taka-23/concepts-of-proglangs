@@ -13,3 +13,5 @@
     + 第 5 章 : 関数と再帰 : [Functions.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/Functions.v)
     + 第 6 章 : 静的有効範囲と名前無し表現 : [StaticScopes.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/StaticScopes.v)
     + 第 7 章 : リストとパターンマッチング : [PatternMatching.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/PatternMatching.v),  [GeneralPatternMatching.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/GeneralPatternMatching.v)
+* 第 3 部 : ML の型システム
+    + 第 8 章 : 単純型システム : [SimpleTypeSystem.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/SimpleTypeSystem.v)
