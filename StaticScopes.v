@@ -466,7 +466,23 @@ Proof.
                     (Trv_Bool _)).
 
         (* Case : Hd is from DBE_Var *)
-        admit.
+        induction Hw as [V0 w | V0 n0 w0 w Hw Hn0'].
+
+            (* Case : Hw is from NV_O *)
+            intros E X Htre e Htr.
+            inversion Htr; subst.
+            inversion Htre; subst.
+            exists v.
+            apply (conj (E_Var1 _ _ _) H5).
+
+            (* Case : Hw is from NV_S *)
+            intros E X Htre e Htr.
+            inversion Htr; subst.
+            inversion Htre; subst.
+            specialize (Hn0' _ _ H5 _ H3).
+            destruct Hn0' as [v0 [Hv0 Hn0']].
+            exists v0.
+            apply (conj (E_Var2 _ _ _ _ _ (not_eq_sym H0) Hv0) Hn0').
 
         (* Case : Hd is from DBE_Let *)
         intros E X Htre e Htr.
@@ -508,7 +524,25 @@ Proof.
         apply (conj (E_LetRec _ _ _ _ _ _ Hv2) Hd2').
 
         (* Case : Hd is from DBE_AppRec *)
-        admit.
+        intros E X Htre e Htr.
+        inversion Htr; subst.
+        specialize (Hd1' _ _ Htre _ H3).
+        destruct Hd1' as [v1 [Hv1 Hd1']].
+        inversion Hd1'; subst.
+        specialize (Hd2' _ _ Htre _ H4).
+        destruct Hd2' as [v2 [Hv2 Hd2']].
+        assert (TransEnvTo (ECons (ECons E0 x (VRecFun E0 x y e)) y v2)
+                           (VLCons (VLCons X0 x) y)
+                           (DBVLCons (DBVLCons V2 (DBVRecFun V2 d0)) w2)) as He.
+
+            (* Proof of the assertion *)
+            refine (Tre_Bind _ _ _ _ _ _ _ Hd2').
+            apply (Tre_Bind _ _ _ _ _ _ H2 Hd1').
+
+        specialize (Hd0' _ _ He _ H5).
+        destruct Hd0' as [v0 [Hv0 Hd0']].
+        exists v0.
+        apply (conj (E_AppRec _ _ _ _ _ _ _ _ _ Hv1 Hv2 Hv0) Hd0').
 Qed.
 
 (* Free variables (omitted in the text) *)
