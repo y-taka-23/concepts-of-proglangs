@@ -46,21 +46,21 @@ Inductive Value : Set :=
     | EEmpty  : Env
     | EBind   : Env -> Var -> Value -> Env.
 
-Inductive Bound : Env -> Var -> Prop :=
-    | B_Bind1 : forall (E : Env) (x : Var) (v : Value),
-                Bound (EBind E x v) x
-    | B_Bind2 : forall (E : Env) (x y : Var) (v : Value),
-                Bound E x ->
-                Bound (EBind E y v) x.
+(* Domains (reused) *)
+Inductive in_dom : Env -> Var -> Prop :=
+    | Dom_EBind1 : forall (E : Env) (x : Var) (v : Value),
+                   in_dom (EBind E x v) x
+    | Dom_EBind2 : forall (E : Env) (x y : Var) (v : Value),
+                   in_dom E x -> in_dom (EBind E y v) x.
 
 (* Merger of two disjoint environments *)
 Inductive MergeTo : Env -> Env -> Env -> Prop :=
     | Mer_Empty  : MergeTo EEmpty EEmpty EEmpty
     | Mer_Bind_l : forall (E : Env) (x : Var) (v : Value),
-                   ~ Bound E x ->
+                   ~ in_dom E x ->
                    MergeTo (EBind E x v) EEmpty (EBind E x v)
     | Mer_Bind_r : forall (E E1 E2 : Env) (x : Var) (v : Value),
-                   MergeTo E1 E2 E -> ~ Bound E1 x -> ~ Bound E2 x ->
+                   MergeTo E1 E2 E -> ~ in_dom E1 x -> ~ in_dom E2 x ->
                    MergeTo E1 (EBind E2 x v) (EBind E x v).
 
 (* Success of pattern match at p.115 *)
