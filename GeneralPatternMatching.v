@@ -104,17 +104,23 @@ Inductive ConcatTo : Env -> Env -> Env -> Prop :=
                   ConcatTo E1 E2 E ->
                   ConcatTo E1 (EBind E2 x v) (EBind E x v).
 
+(* Environment lookup (reused) *)
+Inductive has_value : Env -> Var -> Value -> Prop :=
+    | HV_Bind1 : forall (E : Env) (x : Var) (v : Value),
+                 has_value (EBind E x v) x v
+    | HV_Bind2 : forall (E : Env) (x y : Var) (v v0 : Value),
+                 has_value E x v -> y <> x ->
+                 has_value (EBind E y v0) x v.
+
 (* Evaluation rules at p.117 *)
 Inductive EvalTo : Env -> Exp -> Value -> Prop :=
     | E_Int     : forall (E : Env) (i : Z),
                   EvalTo E (EInt i) (VInt i)
     | E_Bool    : forall (E : Env) (b : bool),
                   EvalTo E (EBool b) (VBool b)
-    | E_Var1    : forall (E : Env) (x : Var) (v : Value),
-                  EvalTo (EBind E x v) (EVar x) v
-    | E_Var2    : forall (E : Env) (x y : Var) (v1 v2 : Value),
-                  x <> y -> EvalTo E (EVar x) v2 ->
-                  EvalTo (EBind E y v1) (EVar x) v2
+    | E_Var     : forall (E : Env) (x : Var) (v : Value),
+                  has_value E x v ->
+                  EvalTo E (EVar x) v
     | E_Plus    : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
                   EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                   Plus i1 i2 i3 ->
