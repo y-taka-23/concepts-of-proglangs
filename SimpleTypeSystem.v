@@ -203,7 +203,7 @@ Inductive halt : Env -> Exp -> Prop :=
 (* Fig 8.6 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
     | VC_Int    : forall i : Z, ValueCompat (VInt i) TInt
-    | VC_Bool   : forall b : bool, ValueCompat (VBool b) TInt
+    | VC_Bool   : forall b : bool, ValueCompat (VBool b) TBool
     | VC_Fun    : forall (E : Env) (C : TEnv) (e : Exp)
                          (x : Var) (t1 t2 : Types),
                   EnvCompat E C -> Typable (TEBind C x t1) e t2 ->
