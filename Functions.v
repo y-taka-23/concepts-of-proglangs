@@ -88,15 +88,15 @@ Inductive EvalTo : Env -> Exp -> Value -> Prop :=
     | E_Var2   : forall (E : Env) (x y : Var) (v1 v2 : Value),
                  x <> y -> EvalTo E (EVar x) v2 ->
                  EvalTo (ECons E y v1) (EVar x) v2
-    | E_Plus   : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Plus   : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                  EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                  Plus i1 i2 i3 ->
                  EvalTo E (EPlus e1 e2) (VInt i3)
-    | E_Minus  : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Minus  : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                  EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                  Minus i1 i2 i3 ->
                  EvalTo E (EMinus e1 e2) (VInt i3)
-    | E_Times  : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Times  : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                  EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                  Times i1 i2 i3 ->
                  EvalTo E (ETimes e1 e2) (VInt i3)
@@ -172,9 +172,9 @@ Proof.
     intros E e v1 v2 H1.
     generalize dependent v2.
     induction H1 as [i | b | x v | E x y v v' Hy H' H |
-                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hp |
-                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Hm |
-                     E e1 e2 e3 i1 i2 i3 He1 He1' He2 He2' Ht |
+                     E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hp |
+                     E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hm |
+                     E e1 e2 i1 i2 i3 He1 He1' He2 He2' Ht |
                      E e1 e2 i1 i2 b He1 He1' He2 He2' Hl |
                      E e1 e2 e3 v' He1 He1' He2 He2' |
                      E e1 e2 e3 v' He1 He1' He3 He3' |

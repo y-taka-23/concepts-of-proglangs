@@ -95,19 +95,19 @@ Inductive DBEvalTo : DBValueList -> DBExp -> DBValue -> Prop :=
     | DBE_IfF    : forall (V : DBValueList) (d1 d2 d3 : DBExp) (w : DBValue),
                    DBEvalTo V d1 (DBVBool false) -> DBEvalTo V d3 w ->
                    DBEvalTo V (DBEIf d1 d2 d3) w
-    | DBE_Plus   : forall (V : DBValueList) (d1 d2 d3 : DBExp) (i1 i2 i3 : Z),
+    | DBE_Plus   : forall (V : DBValueList) (d1 d2 : DBExp) (i1 i2 i3 : Z),
                    DBEvalTo V d1 (DBVInt i1) -> DBEvalTo V d2 (DBVInt i2) ->
                    Plus i1 i2 i3 ->
                    DBEvalTo V (DBEPlus d1 d2) (DBVInt i3)
-    | DBE_Minus  : forall (V : DBValueList) (d1 d2 d3 : DBExp) (i1 i2 i3 : Z),
+    | DBE_Minus  : forall (V : DBValueList) (d1 d2 : DBExp) (i1 i2 i3 : Z),
                    DBEvalTo V d1 (DBVInt i1) -> DBEvalTo V d2 (DBVInt i2) ->
                    Minus i1 i2 i3 ->
                    DBEvalTo V (DBEMinus d1 d2) (DBVInt i3)
-    | DBE_Times  : forall (V : DBValueList) (d1 d2 d3 : DBExp) (i1 i2 i3 : Z),
+    | DBE_Times  : forall (V : DBValueList) (d1 d2 : DBExp) (i1 i2 i3 : Z),
                    DBEvalTo V d1 (DBVInt i1) -> DBEvalTo V d2 (DBVInt i2) ->
                    Times i1 i2 i3 ->
                    DBEvalTo V (DBETimes d1 d2) (DBVInt i3)
-    | DBE_Lt     : forall (V : DBValueList) (d1 d2 d3 : DBExp)
+    | DBE_Lt     : forall (V : DBValueList) (d1 d2 : DBExp)
                           (i1 i2 : Z) (b3 : bool),
                    DBEvalTo V d1 (DBVInt i1) -> DBEvalTo V d2 (DBVInt i2) ->
                    Lt i1 i2 b3 ->
@@ -229,7 +229,7 @@ Proof.
         specialize (He2' _ _ Htre d2 H4).
         destruct He2' as [w2 [Hw2 He2']].
         inversion He2'; subst.
-        apply (conj (DBE_Plus _ _ _ (DBEPlus d1 d2) _ _ _ Hw1 Hw2 Hp)
+        apply (conj (DBE_Plus _ _ _ _ _ _ Hw1 Hw2 Hp)
                     (Trv_Int _)).
 
         (* Case : He is from E_Minus *)
@@ -242,7 +242,7 @@ Proof.
         specialize (He2' _ _ Htre d2 H4).
         destruct He2' as [w2 [Hw2 He2']].
         inversion He2'; subst.
-        apply (conj (DBE_Minus _ _ _ (DBEMinus d1 d2) _ _ _ Hw1 Hw2 Hm)
+        apply (conj (DBE_Minus _ _ _ _ _ _ Hw1 Hw2 Hm)
                     (Trv_Int _)).
 
         (* Case : He is from E_Times *)
@@ -255,7 +255,7 @@ Proof.
         specialize (He2' _ _ Htre d2 H4).
         destruct He2' as [w2 [Hw2 He2']].
         inversion He2'; subst.
-        apply (conj (DBE_Times _ _ _ (DBETimes d1 d2) _ _ _ Hw1 Hw2 Ht)
+        apply (conj (DBE_Times _ _ _ _ _ _ Hw1 Hw2 Ht)
                     (Trv_Int _)).
 
         (* Case : He is from E_Lt *)
@@ -268,7 +268,7 @@ Proof.
         specialize (He2' _ _ Htre d2 H4).
         destruct He2' as [w2 [Hw2 He2']].
         inversion He2'; subst.
-        apply (conj (DBE_Lt _ _ _ (DBELt d1 d2) _ _ _ Hw1 Hw2 Hl)
+        apply (conj (DBE_Lt _ _ _ _ _ _ Hw1 Hw2 Hl)
                     (Trv_Bool _)).
 
         (* Case : He is from E_IfT *)
@@ -370,10 +370,10 @@ Proof.
     induction Hd as [ V i | V b |
                       V d1 d2 d3 w Hd1 Hd1' Hd2 Hd2' |
                       V d1 d2 d3 w Hd1 Hd1' Hd3 Hd3' |
-                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hp |
-                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hm |
-                      V d1 d2 d3 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Ht |
-                      V d1 d2 d3 i1 i2 b3 Hd1 Hd1' Hd2 Hd2' Hl |
+                      V d1 d2 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hp |
+                      V d1 d2 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Hm |
+                      V d1 d2 i1 i2 i3 Hd1 Hd1' Hd2 Hd2' Ht |
+                      V d1 d2 i1 i2 b3 Hd1 Hd1' Hd2 Hd2' Hl |
                       V n w Hw | V d1 d2 w w1 Hd1 Hd1' Hd2 Hd2' | V d |
                       V V2 d1 d2 d0 w w2 Hd1 Hd1' Hd2 Hd2' Hd0 Hd0' |
                       V d1 d2 w Hd2 Hd2' |

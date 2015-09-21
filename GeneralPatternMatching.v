@@ -121,15 +121,15 @@ Inductive EvalTo : Env -> Exp -> Value -> Prop :=
     | E_Var     : forall (E : Env) (x : Var) (v : Value),
                   has_value E x v ->
                   EvalTo E (EVar x) v
-    | E_Plus    : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Plus    : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                   EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                   Plus i1 i2 i3 ->
                   EvalTo E (EPlus e1 e2) (VInt i3)
-    | E_Minus   : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Minus   : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                   EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                   Minus i1 i2 i3 ->
                   EvalTo E (EMinus e1 e2) (VInt i3)
-    | E_Times   : forall (E : Env) (e1 e2 e3 : Exp) (i1 i2 i3 : Z),
+    | E_Times   : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
                   EvalTo E e1 (VInt i1) -> EvalTo E e2 (VInt i2) ->
                   Times i1 i2 i3 ->
                   EvalTo E (ETimes e1 e2) (VInt i3)
