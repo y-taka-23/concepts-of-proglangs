@@ -200,8 +200,39 @@ Inductive halt : Env -> Exp -> Prop :=
                 Error E e ->
                 halt E e.
 
+(* Fig 8.6 *)
+Inductive ValueCompat : Value -> Types -> Prop :=
+    | VC_Int    : forall i : Z, ValueCompat (VInt i) TInt
+    | VC_Bool   : forall b : bool, ValueCompat (VBool b) TInt
+    | VC_Fun    : forall (E : Env) (C : TEnv) (e : Exp)
+                         (x : Var) (t1 t2 : Types),
+                  EnvCompat E C -> Typable (TEBind C x t1) e t2 ->
+                  ValueCompat (VFun E x e) (TFun t1 t2)
+    | VC_RecFun : forall (E : Env) (C : TEnv) (e : Exp)
+                         (x y : Var) (t1 t2 : Types),
+                  EnvCompat E C -> Typable (TEBind (TEBind C x t1) y t1) e t2 ->
+                  ValueCompat (VRecFun E x y e) (TFun t1 t2)
+    | VC_Nil    : forall t' : Types, ValueCompat VNil (TList t')
+    | VC_Cons   : forall (t' : Types) (v1 v2 : Value),
+                  ValueCompat v1 t' -> ValueCompat v2 (TList t') ->
+                  ValueCompat (VCons v1 v2) (TList t')
+    with EnvCompat : Env -> TEnv -> Prop :=
+    | EC_Empty : EnvCompat EEmpty TEEmpty
+    | EC_Bind  : forall (E' : Env) (C' : TEnv)
+                        (x : Var) (v : Value) (t : Types),
+                 EnvCompat E' C' -> ValueCompat v t ->
+                 EnvCompat (EBind E' x v) (TEBind C' x t).
+
+(* Theorem 8.3 *)
+Theorem type_safety_general :
+    forall (E : Env) (C : TEnv) (e : Exp) (t : Types),
+    Typable C e t -> halt E e -> EnvCompat E C ->
+    (exists v : Value, EvalTo E e v /\ ValueCompat v t).
+Proof.
+Admitted.
+
 (* Theorem 8.1 *)
-Theorem type_safety_no_error :
+Theorem type_safety :
     forall (e : Exp) (t t1 t2 t' : Types) (v : Value),
     Typable TEEmpty e t -> halt EEmpty e ->
     (t = TInt ->
