@@ -233,7 +233,9 @@ Proof.
                       E e1 e2 e3 v He1 He1' He3 He3' |
                       E e1 e2 x v' v He1 He1' He2 He2' | E x e |
                       E E2 e1 e2 e0 x v v2 He1 He1' He2 He2' He0 He0' |
-                      | | E | E e1 e2 v1 v2 He1 He1' He2 He2' |
+                      E x y e1 e2 v He2 He2' |
+                      E E2 e1 e2 e0 x y v v0 He1 He1' He2 He2' He0 He0' | E |
+                      E e1 e2 v1 v2 He1 He1' He2 He2' |
                       E e1 e2 e3 v x y He1 He1' He2 He2' |
                       E e1 e2 e3 x y v v1 v2 He1 He1' He3 He3' ].
 
@@ -292,7 +294,12 @@ Proof.
         apply (VC_Fun _ _ _ _ _ _ HC H3).
 
         (* Case : He is from E_App *)
-        admit.
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        inversion He1'; subst.
+        apply (He0' _ _ H7).
+        apply (EC_Bind _ _ _ _ _ H1 (He2' _ _ H4 HC)).
 
         (* Case : He is from E_LetRec *)
         admit.
