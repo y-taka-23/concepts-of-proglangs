@@ -192,14 +192,6 @@ Inductive Error : Env -> Exp -> Prop :=
                  Error E e ->
                  not_list E e.
 
-Inductive halt : Env -> Exp -> Prop :=
-    | H_Value : forall (E : Env) (e : Exp) (v : Value),
-                EvalTo E e v ->
-                halt E e
-    | H_Error : forall (E : Env) (e : Exp),
-                Error E e ->
-                halt E e.
-
 (* Fig 8.6 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
     | VC_Int    : forall i : Z, ValueCompat (VInt i) TInt
@@ -229,6 +221,27 @@ Lemma EvalTo_uniq :
     EvalTo E e v -> EvalTo E e v' -> v = v'.
 Proof.
 Admitted.
+
+(* Type preservation *)
+Lemma type_safety_preserve :
+    forall (E : Env) (C : TEnv) (e : Exp) (t : Types) (v : Value),
+    Typable C e t -> EvalTo E e v -> EnvCompat E C ->
+    ValueCompat v t.
+Proof.
+Admitted.
+
+(* Progress *)
+Lemma type_safety_progres :
+    forall (E : Env) (C : TEnv) (e : Exp) (t : Types) (v : Value),
+    Typable C e t -> EnvCompat E C -> ~ Error E e.
+Proof.
+Admitted.
+
+Inductive halt : Env -> Exp -> Prop :=
+    | H_Value : forall (E : Env) (e : Exp) (v : Value),
+                EvalTo E e v -> halt E e
+    | H_Error : forall (E : Env) (e : Exp),
+                Error E e -> halt E e.
 
 (* Theorem 8.3 *)
 Theorem type_safety_general :
