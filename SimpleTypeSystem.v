@@ -231,8 +231,8 @@ Proof.
 Admitted.
 
 (* Progress *)
-Lemma type_safety_progres :
-    forall (E : Env) (C : TEnv) (e : Exp) (t : Types) (v : Value),
+Lemma type_safety_progress :
+    forall (E : Env) (C : TEnv) (e : Exp) (t : Types),
     Typable C e t -> EnvCompat E C -> ~ Error E e.
 Proof.
 Admitted.
