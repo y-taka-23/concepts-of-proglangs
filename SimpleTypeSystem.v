@@ -215,20 +215,114 @@ Inductive ValueCompat : Value -> Types -> Prop :=
                  EnvCompat E' C' -> ValueCompat v t ->
                  EnvCompat (EBind E' x v) (TEBind C' x t).
 
-(* Uniqueness of the evaluation *)
-Lemma EvalTo_uniq :
-    forall (E : Env) (e : Exp) (v v' : Value),
-    EvalTo E e v -> EvalTo E e v' -> v = v'.
-Proof.
-Admitted.
-
 (* Type preservation *)
 Lemma type_safety_preserve :
     forall (E : Env) (C : TEnv) (e : Exp) (t : Types) (v : Value),
     Typable C e t -> EvalTo E e v -> EnvCompat E C ->
     ValueCompat v t.
 Proof.
-Admitted.
+    intros E C e t v Ht He.
+    generalize dependent t.
+    generalize dependent C.
+    induction He as [ E i | E b | E x v Hv |
+                      E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hp |
+                      E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hm |
+                      E e1 e2 i1 i2 i3 He1 He1' He2 He2' Htm |
+                      E e1 e2 i1 i2 b3 He1 He1' He2 He2' Hl |
+                      E e1 e2 e3 v He1 He1' He2 He2' |
+                      E e1 e2 e3 v He1 He1' He3 He3' |
+                      E e1 e2 x v' v He1 He1' He2 He2' | E x e |
+                      E E2 e1 e2 e0 x v v2 He1 He1' He2 He2' He0 He0' |
+                      | | E | E e1 e2 v1 v2 He1 He1' He2 He2' |
+                      E e1 e2 e3 v x y He1 He1' He2 He2' |
+                      E e1 e2 e3 x y v v1 v2 He1 He1' He3 He3' ].
+
+        (* Case : He is from E_Int *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Int.
+
+        (* Case : He is from E_Bool *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Bool.
+
+        (* Case : He is from E_Var *)
+        admit.
+
+        (* Case : He is from E_Plus *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Int.
+
+        (* Case : He is from E_Minus *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Int.
+
+        (* Case : He is from E_Times *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Int.
+
+        (* Case : He is from E_Lt *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Bool.
+
+        (* Case : He is from E_ItT *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He2' _ _ H5 HC).
+
+        (* Case : He is from E_ItF *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He3' _ _ H6 HC).
+
+        (* Case : He is from E_Let *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He2' _ _ H5).
+        apply (EC_Bind _ _ _ _ _ HC (He1' _ _ H4 HC)).
+
+        (* Case : He is from E_Fun *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (VC_Fun _ _ _ _ _ _ HC H3).
+
+        (* Case : He is from E_App *)
+        admit.
+
+        (* Case : He is from E_LetRec *)
+        admit.
+
+        (* Case : He is from E_AppRec *)
+        admit.
+
+        (* Case : He is from E_Nil *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply VC_Nil.
+
+        (* Case : He is from E_Cons *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (VC_Cons _ _ _ (He1' _ _ H2 HC) (He2' _ _ H4 HC)).
+
+        (* Case : He is from E_MatchNil *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He2' _ _ H7 HC).
+
+        (* Case : He is from E_MatchCons *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H6 HC).
+        inversion He1'; subst.
+        apply (He3' _ _ H8).
+        apply (EC_Bind _ _ _ _ _ (EC_Bind _ _ _ _ _ HC H2) H3).
+Qed.
 
 (* Progress *)
 Lemma type_safety_progress :
@@ -249,144 +343,16 @@ Theorem type_safety_general :
     Typable C e t -> halt E e -> EnvCompat E C ->
     (exists v : Value, EvalTo E e v /\ ValueCompat v t).
 Proof.
-    intros E C e t Ht Hh.
-    generalize dependent t.
-    generalize dependent C.
+    intros E C e t Ht Hh HC.
     inversion Hh; subst.
 
         (* Case : Hh is from H_Value *)
-        induction H as [ E i | E b | E x v Hv |
-                         E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hp |
-                         E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hm |
-                         E e1 e2 i1 i2 i3 He1 He1' He2 He2' Htm |
-                         E e1 e2 i1 i2 b3 He1 He1' He2 He2' Hl |
-                         E e1 e2 e3 v He1 He1' He2 He2' |
-                         E e1 e2 e3 v He1 He1' He3 He3' |
-                         E e1 e2 x v' v He1 He1' He2 He2' | E x e |
-                         E E2 e1 e2 e0 x v v2 He1 He1' He2 He2' He0 He0' |
-                         | | E | E e1 e2 v1 v2 He1 He1' He2 He2' |
-                         E e1 e2 e3 v x y He1 He1' He2 He2' |
-                         E e1 e2 e3 x y v v1 v2 He1 He1' He3 He3' ].
-
-            (* Case : H is from E_Int *)
-            intros C t Ht HC.
-            exists (VInt i).
-            inversion Ht; subst.
-            apply (conj (E_Int _ _) (VC_Int _)).
-
-            (* Case : H is from E_Bool *)
-            intros C t Ht HC.
-            exists (VBool b).
-            inversion Ht; subst.
-            apply (conj (E_Bool _ _) (VC_Bool _)).
-
-            (* Case : H is from E_Var *)
-            admit.
-
-            (* Case : H is from E_Plus *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj (E_Plus _ _ _ _ _ _ He1 He2 Hp) (VC_Int _)).
-
-            (* Case : H is from E_Minus *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj (E_Minus _ _ _ _ _ _ He1 He2 Hm) (VC_Int _)).
-
-            (* Case : H is from E_Times *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj (E_Times _ _ _ _ _ _ He1 He2 Htm) (VC_Int _)).
-
-            (* Case : H is from E_Lt *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VBool b3).
-            apply (conj (E_Lt _ _ _ _ _ _ He1 He2 Hl) (VC_Bool _)).
-
-            (* Case : H is from E_IfT *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He2' (H_Value _ _ _ He2) _ _ H5 HC).
-            destruct He2' as [v2 [Hv2 He2']].
-            assert (v = v2) by apply (EvalTo_uniq _ _ _ _ He2 Hv2); subst.
-            exists v2.
-            apply (conj (E_IfT _ _ _ _ _ He1 He2) He2').
-
-            (* Case : H is from E_IfF *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He3' (H_Value _ _ _ He3) _ _ H6 HC).
-            destruct He3' as [v3 [Hv3 He3']].
-            assert (v = v3) by apply (EvalTo_uniq _ _ _ _ He3 Hv3); subst.
-            exists v3.
-            apply (conj (E_IfF _ _ _ _ _ He1 He3) He3').
-
-            (* Case : H is from E_Let *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' (H_Value _ _ _ He1) _ _ H4 HC).
-            destruct He1' as [v1 [Hv1 He1']].
-            assert (v' = v1) by apply (EvalTo_uniq _ _ _ _ He1 Hv1); subst.
-            specialize (He2' (H_Value _ _ _ He2) _ _ H5
-                             (EC_Bind _ _ _ _ _ HC He1')).
-            destruct He2' as [v2 [Hv2 He2']].
-            exists v2.
-            apply (conj (E_Let _ _ _ _ _ _ Hv1 Hv2) He2').
-
-            (* Case : H is from E_Fun *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VFun E x e).
-            apply (conj (E_Fun _ _ _) (VC_Fun _ _ _ _ _ _ HC H3)).
-
-            (* Case : H is from E_App *)
-            admit.
-
-            (* Case : H is from E_LetRec *)
-            admit.
-
-            (* Case : H is from E_AppRec *)
-            admit.
-
-            (* Case : H is from E_Nil *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists VNil.
-            apply (conj (E_Nil _) (VC_Nil _)).
-
-            (* Case : H is from E_Cons *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' (H_Value _ _ _ He1) _ _ H2 HC).
-            destruct He1' as [v1' [Hv1' He1']].
-            assert (v1 = v1') by apply (EvalTo_uniq _ _ _ _ He1 Hv1'); subst.
-            specialize (He2' (H_Value _ _ _ He2) _ _ H4 HC).
-            destruct He2' as [v2' [Hv2' He2']].
-            assert (v2 = v2') by apply (EvalTo_uniq _ _ _ _ He2 Hv2'); subst.
-            exists (VCons v1' v2').
-            apply (conj (E_Cons _ _ _ _ _ Hv1' Hv2') (VC_Cons _ _ _ He1' He2')).
-
-            (* Case : H is from E_MatchNil *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' (H_Value _ _ _ He1) _ _ H6 HC).
-            destruct He1' as [v1 [Hv1 He1']].
-            assert (VNil = v1) by apply (EvalTo_uniq _ _ _ _ He1 Hv1); subst.
-            specialize (He2' (H_Value _ _ _ He2) _ _ H7 HC).
-            destruct He2' as [v2 [Hv2 He2']].
-            assert (v = v2) by apply (EvalTo_uniq _ _ _ _ He2 Hv2); subst.
-            exists v2.
-            apply (conj (E_MatchNil _ _ _ _ _ _ _ Hv1 Hv2) He2').
-
-            (* Case : H is from E_MatchCons *)
-            admit.
+        exists v.
+        apply (conj H (type_safety_preserve _ _ _ _ _ Ht H HC)).
 
         (* Case : Hh is from H_Error *)
-        admit.
+        contradict H.
+        apply (type_safety_progress _ _ _ _ Ht HC).
 Qed.
 
 (* Theorem 8.1 *)
