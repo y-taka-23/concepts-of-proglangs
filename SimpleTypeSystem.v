@@ -227,12 +227,6 @@ Inductive ResultIn : Env -> Exp -> Result -> Prop :=
     | R_Error : forall (E : Env) (e : Exp),
                 Error E e -> ResultIn E e RError.
 
-Lemma EvalTo_uniq :
-    forall (E : Env) (e : Exp) (v1 v2 : Value),
-    EvalTo E e v1 -> EvalTo E e v2 -> v1 = v2.
-Proof.
-Admitted.
-
 (* Theorem 8.3 *)
 Theorem type_safety_general :
     forall (E : Env) (C : TEnv) (e : Exp) (r : Result) (t : Types),
