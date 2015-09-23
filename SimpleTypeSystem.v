@@ -221,6 +221,12 @@ Inductive halt : Env -> Exp -> Prop :=
     | H_Error : forall (E : Env) (e : Exp),
                 Error E e -> halt E e.
 
+Lemma EvalTo_uniq :
+    forall (E : Env) (e : Exp) (v1 v2 : Value),
+    EvalTo E e v1 -> EvalTo E e v2 -> v1 = v2.
+Proof.
+Admitted.
+
 (* Theorem 8.3 *)
 Theorem type_safety_general :
     forall (E : Env) (C : TEnv) (e : Exp) (t : Types),
@@ -304,10 +310,21 @@ Proof.
             apply (conj (E_IfF _ _ _ _ _ He1 Hv3) He3').
 
             (* Case : He is from E_Let *)
-            admit.
+            intros C t Ht HC.
+            inversion Ht; subst.
+            specialize (He1' _ _ H4 HC).
+            destruct He1' as [v1 [Hv1 He1']].
+            assert (v1 = v') by apply (EvalTo_uniq _ _ _ _ Hv1 He1); subst.
+            specialize (He2' _ _ H5 (EC_Bind _ _ _ _ _ HC He1')).
+            destruct He2' as [v2 [Hv2 He2']].
+            exists v2.
+            apply (conj (E_Let _ _ _ _ _ _ He1 Hv2) He2').
 
             (* Case : He is from E_Fun *)
-            admit.
+            intros C t Ht HC.
+            inversion Ht; subst.
+            exists (VFun E x e).
+            apply (conj (E_Fun _ _ _) (VC_Fun _ _ _ _ _ _ HC H3)).
 
             (* Case : He is from E_App *)
             admit.
@@ -343,7 +360,18 @@ Proof.
             apply (conj (E_MatchNil _ _ _ _ _ _ _ He1 Hv2) He2').
 
             (* Case : He is from E_MatchCons *)
-            admit.
+            intros C t Ht HC.
+            inversion Ht; subst.
+            specialize (He1' _ _ H6 HC).
+            destruct He1' as [v1' [Hv1' He1']].
+            assert (v1' = VCons v1 v2)
+                by apply (EvalTo_uniq _ _ _ _ Hv1' He1); subst.
+            inversion He1'; subst.
+            specialize (He3' _ _ H8 (EC_Bind _ _ _ _ _
+                                    (EC_Bind _ _ _ _ _ HC H2) H3)).
+            destruct He3' as [v3 [Hv3 He3']].
+            exists v3.
+            apply (conj (E_MatchCons _ _ _ _ _ _ _ _ _ He1 Hv3) He3').
 
         (* Case : Hh is from H_Error *)
         admit.
