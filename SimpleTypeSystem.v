@@ -70,6 +70,11 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                  Typable (TEBind (TEBind C x t') y (TList t')) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
+(* Optional type for values *)
+Inductive Result : Set :=
+    | RValue : Value -> Result
+    | RError : Result.
+
 (* Domains (reuesed) *)
 Inductive in_dom : Env -> Var -> Prop :=
     | Dom_EBind1 : forall (E : Env) (x : Var) (v : Value),
@@ -79,8 +84,9 @@ Inductive in_dom : Env -> Var -> Prop :=
 
 (* Fig 8.3, 8.4 and 8.5 *)
 Inductive Error : Env -> Exp -> Prop :=
-    | E_IfErr1    : forall (E : Env) (e1 e2 e3 : Exp),
-                    not_bool E e1 ->
+    | E_IfErr1    : forall (E : Env) (e1 e2 e3 : Exp) (r : Result),
+                    ResultIn E e1 r ->
+                    (forall b : bool, r <> RValue (VBool b)) ->
                     Error E (EIf e1 e2 e3)
     | E_IfErr2    : forall (E : Env) (e1 e2 e3 : Exp),
                     EvalTo E e1 (VBool true) -> Error E e2 ->
@@ -88,29 +94,33 @@ Inductive Error : Env -> Exp -> Prop :=
     | E_IfErr3    : forall (E : Env) (e1 e2 e3 : Exp),
                     EvalTo E e1 (VBool false) -> Error E e3 ->
                     Error E (EIf e1 e2 e3)
-    | E_PlusErr1  : forall (E : Env) (e1 e2 : Exp),
-                    not_int E e1 ->
+    | E_PlusErr1  : forall (E : Env) (e1 e2 : Exp) (r : Result),
+                    ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (EPlus e1 e2)
-    | E_PlusErr2  : forall (E : Env) (e1 e2 : Exp) (i1 : Z),
-                    EvalTo E e1 (VInt i1) -> not_int E e2 ->
+    | E_PlusErr2  : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
+                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
+                    (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (EPlus e1 e2)
-    | E_MinusErr1 : forall (E : Env) (e1 e2 : Exp),
-                    not_int E e1 ->
+    | E_MinusErr1 : forall (E : Env) (e1 e2 : Exp) (r : Result),
+                    ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (EMinus e1 e2)
-    | E_MinusErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z),
-                    EvalTo E e1 (VInt i1) -> not_int E e2 ->
+    | E_MinusErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
+                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
+                    (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (EMinus e1 e2)
-    | E_TimesErr1 : forall (E : Env) (e1 e2 : Exp),
-                    not_int E e1 ->
+    | E_TimesErr1 : forall (E : Env) (e1 e2 : Exp) (r : Result),
+                    ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (ETimes e1 e2)
-    | E_TimesErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z),
-                    EvalTo E e1 (VInt i1) -> not_int E e2 ->
+    | E_TimesErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
+                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
+                    (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (ETimes e1 e2)
-    | E_LtErr1    : forall (E : Env) (e1 e2 : Exp),
-                    not_int E e1 ->
+    | E_LtErr1    : forall (E : Env) (e1 e2 : Exp) (r : Result),
+                    ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (ELt e1 e2)
-    | E_LtErr2    : forall (E : Env) (e1 e2 : Exp) (i1 : Z),
-                    EvalTo E e1 (VInt i1) -> not_int E e2 ->
+    | E_LtErr2    : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
+                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
+                    (forall i : Z, r <> RValue (VInt i)) ->
                     Error E (ELt e1 e2)
     | E_VarErr    : forall (E : Env) (x : Var),
                     ~ in_dom E x ->
@@ -121,8 +131,12 @@ Inductive Error : Env -> Exp -> Prop :=
     | E_LetErr2   : forall (E : Env) (e1 e2 : Exp) (x : Var) (v1 : Value),
                     EvalTo E e1 v1 -> Error (EBind E x v1) e2 ->
                     Error E (ELet x e1 e2)
-    | E_AppErr1   : forall (E : Env) (e1 e2 : Exp),
-                    not_closure E e1 ->
+    | E_AppErr1   : forall (E : Env) (e1 e2 : Exp) (r : Result),
+                    ResultIn E e1 r ->
+                    (forall (E : Env) (x : Var) (e : Exp),
+                     r <> RValue (VFun E x e)) ->
+                    (forall (E : Env) (x y : Var) (e : Exp),
+                     r <> RValue (VRecFun E x y e)) ->
                     Error E (EApp e1 e2)
     | E_AppErr2   : forall (E E2 : Env) (e1 e2 e0 : Exp) (x : Var),
                     EvalTo E e1 (VFun E2 x e0) -> Error E e2 ->
@@ -148,8 +162,9 @@ Inductive Error : Env -> Exp -> Prop :=
     | E_ConsErr2  : forall (E : Env) (e1 e2 : Exp) (v1 : Value),
                     EvalTo E e1 v1 -> Error E e2 ->
                     Error E (ECons e1 e2)
-    | E_MatchErr1 : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var),
-                    not_list E e1 ->
+    | E_MatchErr1 : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var) (r : Result),
+                    ResultIn E e1 r -> r <> RValue VNil ->
+                    (forall v1 v2 : Value, r <> RValue (VCons v1 v2)) ->
                     Error E (EMatch e1 e2 x y e3)
     | E_MatchErr2 : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var),
                     EvalTo E e1 VNil -> Error E e2 ->
@@ -159,38 +174,11 @@ Inductive Error : Env -> Exp -> Prop :=
                     EvalTo E e1 (VCons v1 v2) ->
                     Error (EBind (EBind E x v1) y v2) e3 ->
                     Error E (EMatch e1 e2 x y e3)
-    with not_int : Env -> Exp -> Prop :=
-    | NI_Value : forall (E : Env) (e : Exp) (v : Value),
-                 EvalTo E e v -> (forall i : Z, v <> VInt i) ->
-                 not_int E e
-    | NI_Error : forall (E : Env) (e : Exp),
-                 Error E e ->
-                 not_int E e
-    with not_bool : Env -> Exp -> Prop :=
-    | NB_Value : forall (E : Env) (e : Exp) (v : Value),
-                 EvalTo E e v -> (forall b : bool, v <> VBool b) ->
-                 not_bool E e
-    | NB_Error : forall (E : Env) (e : Exp),
-                 Error E e ->
-                 not_bool E e
-    with not_closure : Env -> Exp -> Prop :=
-    | NC_Value : forall (E : Env) (e : Exp) (v : Value),
-                 EvalTo E e v ->
-                 (forall (E0 : Env) (x0 : Var) (e0 : Exp), v <> VFun E0 x0 e0) ->
-                 (forall (E0 : Env) (x0 y0 : Var) (e0 : Exp),
-                  v <> VRecFun E0 x0 y0 e0) ->
-                 not_closure E e
-    | NC_Error : forall (E : Env) (e : Exp),
-                 Error E e ->
-                 not_closure E e
-    with not_list : Env -> Exp -> Prop :=
-    | NL_Value : forall (E : Env) (e : Exp) (v : Value),
-                 EvalTo E e v -> v <> VNil ->
-                 (forall v1 v2 : Value, v <> VCons v1 v2) ->
-                 not_list E e
-    | NL_Error : forall (E : Env) (e : Exp),
-                 Error E e ->
-                 not_list E e.
+    with ResultIn : Env -> Exp -> Result -> Prop :=
+    | R_Value : forall (E : Env) (e : Exp) (v : Value),
+                EvalTo E e v -> ResultIn E e (RValue v)
+    | R_Error : forall (E : Env) (e : Exp),
+                Error E e -> ResultIn E e RError.
 
 (* Fig 8.6 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
@@ -214,18 +202,6 @@ Inductive ValueCompat : Value -> Types -> Prop :=
                         (x : Var) (v : Value) (t : Types),
                  EnvCompat E' C' -> ValueCompat v t ->
                  EnvCompat (EBind E' x v) (TEBind C' x t).
-
-(* Optional type for values *)
-Inductive Result : Set :=
-    | RValue : Value -> Result
-    | RError : Result.
-
-(* Wrapper for EvalTo and Error *)
-Inductive ResultIn : Env -> Exp -> Result -> Prop :=
-    | R_Value : forall (E : Env) (e : Exp) (v : Value),
-                EvalTo E e v -> ResultIn E e (RValue v)
-    | R_Error : forall (E : Env) (e : Exp),
-                Error E e -> ResultIn E e RError.
 
 (* Theorem 8.3 *)
 Theorem type_safety_general :
