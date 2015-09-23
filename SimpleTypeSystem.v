@@ -338,22 +338,36 @@ Proof.
         admit.
 Qed.
 
-(* Theorem 8.1 *)
-Theorem type_safety :
-    forall (e : Exp) (t t1 t2 t' : Types) (v : Value) (r : Result),
-    Typable TEEmpty e t -> ResultIn EEmpty e r ->
-    (t = TInt ->
-     exists i : Z, ResultIn EEmpty e (RValue (VInt i))) /\
-    (t = TBool ->
-     exists b : bool, ResultIn EEmpty e (RValue (VBool b))) /\
-    (t = TFun t1 t2 ->
-     exists (E : Env) (x : Var) (e : Exp),
-         ResultIn EEmpty e (RValue (VFun E x e)) \/
-     exists (E : Env) (x y : Var) (e : Exp),
-         ResultIn EEmpty e (RValue (VRecFun E x y e))) /\
-    (t = TList t' ->
-     EvalTo EEmpty e VNil \/
-     exists v1 v2 : Value, ResultIn EEmpty e (RValue (VCons v1 v2))).
+(* Theorem 8.1 (1) *)
+Theorem Typable_safe_int :
+    forall (e : Exp) (r : Result),
+    Typable TEEmpty e TInt -> ResultIn EEmpty e r ->
+    exists i : Z, r = RValue (VInt i).
+Proof.
+Admitted.
+
+(* Theorem 8.1 (2) *)
+Theorem Typable_safe_bool :
+    forall (e : Exp) (r : Result),
+    Typable TEEmpty e TBool -> ResultIn EEmpty e r ->
+    exists b : bool, r = RValue (VBool b).
+Proof.
+Admitted.
+
+(* Theorem 8.1 (3) *)
+Theorem Typable_safe_fun :
+    forall (e : Exp) (r : Result) (t1 t2 : Types),
+    Typable TEEmpty e (TFun t1 t2) -> ResultIn EEmpty e r ->
+    exists (E : Env) (x : Var) (e : Exp), r = RValue (VFun E x e) \/
+         exists (E : Env) (x y : Var) (e : Exp), r = RValue (VRecFun E x y e).
+Proof.
+Admitted.
+
+(* Theorem 8.1 (4) *)
+Theorem Typable_safe_list :
+    forall (e : Exp) (r : Result) (t : Types),
+    Typable TEEmpty e (TList t) -> ResultIn EEmpty e r ->
+    r = RValue VNil \/ exists v1 v2 : Value, r = RValue (VCons v1 v2).
 Proof.
 Admitted.
 
