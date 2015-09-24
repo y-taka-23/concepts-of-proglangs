@@ -1,7 +1,48 @@
 Section SimpleTypeSystem.
-Require Import PatternMatching.
 Require Import ZArith.
 Open Scope Z_scope.
+
+(* Variables (reused) *)
+Inductive Var : Set :=
+    | VId : nat -> Var.
+
+(* Expressions (reused) *)
+Inductive Exp : Set :=
+    | EInt    : Z -> Exp
+    | EBool   : bool -> Exp
+    | EVar    : Var -> Exp
+    | EPlus   : Exp -> Exp -> Exp
+    | EMinus  : Exp -> Exp -> Exp
+    | ETimes  : Exp -> Exp -> Exp
+    | ELt     : Exp -> Exp -> Exp
+    | EIf     : Exp -> Exp -> Exp -> Exp
+    | ELet    : Var -> Exp -> Exp -> Exp
+    | EFun    : Var -> Exp -> Exp
+    | EApp    : Exp -> Exp -> Exp
+    | ELetRec : Var -> Var -> Exp -> Exp -> Exp
+    | ENil    : Exp
+    | ECons   : Exp -> Exp -> Exp
+    | EMatch  : Exp -> Exp -> Var -> Var -> Exp -> Exp.
+
+(* Values and environments (reused) *)
+Inductive Value : Set :=
+    | VInt    : Z -> Value
+    | VBool   : bool -> Value
+    | VFun    : Env -> Var -> Exp -> Value
+    | VRecFun : Env -> Var -> Var -> Exp -> Value
+    | VNil    : Value
+    | VCons   : Value -> Value -> Value
+    with Env : Set :=
+    | EEmpty  : Env
+    | EBind   : Env -> Var -> Value -> Env.
+
+(* Environment lookup (reused) *)
+Inductive has_value : Env -> Var -> Value -> Prop :=
+    | HV_Bind1 : forall (E : Env) (x : Var) (v : Value),
+                 has_value (EBind E x v) x v
+    | HV_Bind2 : forall (E : Env) (x y : Var) (v v0 : Value),
+                 has_value E x v -> y <> x ->
+                 has_value (EBind E y v0) x v.
 
 (* Types at p.125 *)
 Inductive Types : Set :=
@@ -75,6 +116,16 @@ Inductive Result : Set :=
     | RValue : Value -> Result
     | RError : Result.
 
+(* Binary operations as relations (reused) *)
+Inductive Plus : Z -> Z -> Z -> Prop :=
+    | B_Plus : forall i1 i2 i3 : Z, i3 = i1 + i2 -> Plus i1 i2 i3.
+Inductive Minus : Z -> Z -> Z -> Prop :=
+    | B_Minus : forall i1 i2 i3 : Z, i3 = i1 - i2 -> Minus i1 i2 i3.
+Inductive Times : Z -> Z -> Z -> Prop :=
+    | B_Times : forall i1 i2 i3 : Z, i3 = i1 * i2 -> Times i1 i2 i3.
+Inductive Lt : Z -> Z -> bool -> Prop :=
+    | B_Lt : forall (i1 i2 : Z) (b3 : bool), b3 = (i1 <? i2) -> Lt i1 i2 b3.
+
 (* Domains (reuesed) *)
 Inductive in_dom : Env -> Var -> Prop :=
     | Dom_EBind1 : forall (E : Env) (x : Var) (v : Value),
@@ -82,103 +133,176 @@ Inductive in_dom : Env -> Var -> Prop :=
     | Dom_EBind2 : forall (E : Env) (x y : Var) (v : Value),
                    in_dom E x -> in_dom (EBind E y v) x.
 
-(* Fig 8.3, 8.4 and 8.5 *)
-Inductive Error : Env -> Exp -> Prop :=
+(* Evaluation rules (reused) + Fig 8.3, 8.4 and 8.5 *)
+Inductive ResultIn : Env -> Exp -> Result -> Prop :=
+    | E_Int       : forall (E : Env) (i : Z),
+                    ResultIn E (EInt i) (RValue (VInt i))
+    | E_Bool      : forall (E : Env) (b : bool),
+                    ResultIn E (EBool b) (RValue (VBool b))
+    | E_Var       : forall (E : Env) (x : Var) (v : Value),
+                    has_value E x v ->
+                    ResultIn E (EVar x) (RValue v)
+    | E_Plus      : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 (RValue (VInt i2)) ->
+                    Plus i1 i2 i3 ->
+                    ResultIn E (EPlus e1 e2) (RValue (VInt i3))
+    | E_Minus     : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 (RValue (VInt i2)) ->
+                    Minus i1 i2 i3 ->
+                    ResultIn E (EMinus e1 e2) (RValue (VInt i3))
+    | E_Times     : forall (E : Env) (e1 e2 : Exp) (i1 i2 i3 : Z),
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 (RValue (VInt i2)) ->
+                    Times i1 i2 i3 ->
+                    ResultIn E (ETimes e1 e2) (RValue (VInt i3))
+    | E_Lt        : forall (E : Env) (e1 e2 : Exp) (i1 i2 : Z) (b3 : bool),
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 (RValue (VInt i2)) ->
+                    Lt i1 i2 b3 ->
+                    ResultIn E (ELt e1 e2) (RValue (VBool b3))
+    | E_IfT       : forall (E : Env) (e1 e2 e3 : Exp) (v : Value),
+                    ResultIn E e1 (RValue (VBool true)) ->
+                    ResultIn E e2 (RValue v) ->
+                    ResultIn E (EIf e1 e2 e3) (RValue v)
+    | E_IfF       : forall (E : Env) (e1 e2 e3 : Exp) (v : Value),
+                    ResultIn E e1 (RValue (VBool false)) ->
+                    ResultIn E e3 (RValue v) ->
+                    ResultIn E (EIf e1 e2 e3) (RValue v)
+    | E_Let       : forall (E : Env) (e1 e2 : Exp) (x : Var) (v1 v : Value),
+                    ResultIn E e1 (RValue v1) ->
+                    ResultIn (EBind E x v1) e2 (RValue v) ->
+                    ResultIn E (ELet x e1 e2) (RValue v)
+    | E_Fun       : forall (E : Env) (x : Var) (e : Exp),
+                    ResultIn E (EFun x e) (RValue (VFun E x e))
+    | E_App       : forall (E E2 : Env) (e1 e2 e0 : Exp) (x : Var)
+                           (v v2 : Value),
+                    ResultIn E e1 (RValue (VFun E2 x e0)) ->
+                    ResultIn E e2 (RValue v2) ->
+                    ResultIn (EBind E2 x v2) e0 (RValue v) ->
+                    ResultIn E (EApp e1 e2) (RValue v)
+    | E_LetRec    : forall (E : Env) (x y : Var) (e1 e2 : Exp) (v : Value),
+                    ResultIn (EBind E x (VRecFun E x y e1)) e2 (RValue v) ->
+                    ResultIn E (ELetRec x y e1 e2) (RValue v)
+    | E_AppRec    : forall (E E2 : Env) (e1 e2 e0 : Exp) (x y : Var)
+                           (v v2 : Value),
+                    ResultIn E e1 (RValue (VRecFun E2 x y e0)) ->
+                    ResultIn E e2 (RValue v2) ->
+                    ResultIn (EBind (EBind E2 x (VRecFun E2 x y e0)) y v2)
+                             e0 (RValue v) ->
+                    ResultIn E (EApp e1 e2) (RValue v)
+    | E_Nil       : forall (E : Env),
+                    ResultIn E ENil (RValue VNil)
+    | E_Cons      : forall (E : Env) (e1 e2 : Exp) (v1 v2 : Value),
+                    ResultIn E e1 (RValue v1) -> ResultIn E e2 (RValue v2) ->
+                    ResultIn E (ECons e1 e2) (RValue (VCons v1 v2))
+    | E_MatchNil  : forall (E : Env) (e1 e2 e3 : Exp) (v : Value) (x y : Var),
+                    ResultIn E e1 (RValue VNil) -> ResultIn E e2 (RValue v) ->
+                    ResultIn E (EMatch e1 e2 x y e3) (RValue v)
+    | E_MatchCons : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var)
+                           (v v1 v2 : Value),
+                    ResultIn E e1 (RValue (VCons v1 v2)) ->
+                    ResultIn (EBind (EBind E x v1) y v2) e3 (RValue v) ->
+                    ResultIn E (EMatch e1 e2 x y e3) (RValue v)
     | E_IfErr1    : forall (E : Env) (e1 e2 e3 : Exp) (r : Result),
                     ResultIn E e1 r ->
                     (forall b : bool, r <> RValue (VBool b)) ->
-                    Error E (EIf e1 e2 e3)
+                    ResultIn E (EIf e1 e2 e3) RError
     | E_IfErr2    : forall (E : Env) (e1 e2 e3 : Exp),
-                    EvalTo E e1 (VBool true) -> Error E e2 ->
-                    Error E (EIf e1 e2 e3)
+                    ResultIn E e1 (RValue (VBool true)) ->
+                    ResultIn E e2 RError ->
+                    ResultIn E (EIf e1 e2 e3) RError
     | E_IfErr3    : forall (E : Env) (e1 e2 e3 : Exp),
-                    EvalTo E e1 (VBool false) -> Error E e3 ->
-                    Error E (EIf e1 e2 e3)
+                    ResultIn E e1 (RValue (VBool false)) ->
+                    ResultIn E e3 RError ->
+                    ResultIn E (EIf e1 e2 e3) RError
     | E_PlusErr1  : forall (E : Env) (e1 e2 : Exp) (r : Result),
                     ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (EPlus e1 e2)
+                    ResultIn E (EPlus e1 e2) RError
     | E_PlusErr2  : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
-                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
-                    (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (EPlus e1 e2)
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 r -> (forall i : Z, r <> RValue (VInt i)) ->
+                    ResultIn E (EPlus e1 e2) RError
     | E_MinusErr1 : forall (E : Env) (e1 e2 : Exp) (r : Result),
                     ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (EMinus e1 e2)
+                    ResultIn E (EMinus e1 e2) RError
     | E_MinusErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
-                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
-                    (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (EMinus e1 e2)
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 r -> (forall i : Z, r <> RValue (VInt i)) ->
+                    ResultIn E (EMinus e1 e2) RError
     | E_TimesErr1 : forall (E : Env) (e1 e2 : Exp) (r : Result),
                     ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (ETimes e1 e2)
+                    ResultIn E (ETimes e1 e2) RError
     | E_TimesErr2 : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
-                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
-                    (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (ETimes e1 e2)
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 r -> (forall i : Z, r <> RValue (VInt i)) ->
+                    ResultIn E (ETimes e1 e2) RError
     | E_LtErr1    : forall (E : Env) (e1 e2 : Exp) (r : Result),
                     ResultIn E e1 r -> (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (ELt e1 e2)
+                    ResultIn E (ELt e1 e2) RError
     | E_LtErr2    : forall (E : Env) (e1 e2 : Exp) (i1 : Z) (r : Result),
-                    EvalTo E e1 (VInt i1) -> ResultIn E e2 r ->
-                    (forall i : Z, r <> RValue (VInt i)) ->
-                    Error E (ELt e1 e2)
+                    ResultIn E e1 (RValue (VInt i1)) ->
+                    ResultIn E e2 r -> (forall i : Z, r <> RValue (VInt i)) ->
+                    ResultIn E (ELt e1 e2) RError
     | E_VarErr    : forall (E : Env) (x : Var),
                     ~ in_dom E x ->
-                    Error E (EVar x)
+                    ResultIn E (EVar x) RError
     | E_LetErr1   : forall (E : Env) (e1 e2 : Exp) (x : Var),
-                    Error E e1 ->
-                    Error E (ELet x e1 e2)
+                    ResultIn E e1 RError ->
+                    ResultIn E (ELet x e1 e2) RError
     | E_LetErr2   : forall (E : Env) (e1 e2 : Exp) (x : Var) (v1 : Value),
-                    EvalTo E e1 v1 -> Error (EBind E x v1) e2 ->
-                    Error E (ELet x e1 e2)
+                    ResultIn E e1 (RValue v1) ->
+                    ResultIn (EBind E x v1) e2 RError ->
+                    ResultIn E (ELet x e1 e2) RError
     | E_AppErr1   : forall (E : Env) (e1 e2 : Exp) (r : Result),
                     ResultIn E e1 r ->
                     (forall (E : Env) (x : Var) (e : Exp),
                      r <> RValue (VFun E x e)) ->
                     (forall (E : Env) (x y : Var) (e : Exp),
                      r <> RValue (VRecFun E x y e)) ->
-                    Error E (EApp e1 e2)
+                    ResultIn E (EApp e1 e2) RError
     | E_AppErr2   : forall (E E2 : Env) (e1 e2 e0 : Exp) (x : Var),
-                    EvalTo E e1 (VFun E2 x e0) -> Error E e2 ->
-                    Error E (EApp e1 e2)
+                    ResultIn E e1 (RValue (VFun E2 x e0)) ->
+                    ResultIn E e2 RError ->
+                    ResultIn E (EApp e1 e2) RError
     | E_AppErr3   : forall (E E2 : Env) (e1 e2 e0 : Exp) (x y : Var),
-                    EvalTo E e1 (VRecFun E2 x y e0) -> Error E e2 ->
-                    Error E (EApp e1 e2)
+                    ResultIn E e1 (RValue (VRecFun E2 x y e0)) ->
+                    ResultIn E e2 RError ->
+                    ResultIn E (EApp e1 e2) RError
     | E_AppErr4   : forall (E E2 : Env) (e1 e2 e0 : Exp) (x : Var) (v2 : Value),
-                    EvalTo E e1 (VFun E2 x e0) -> EvalTo E e2 v2 ->
-                    Error (EBind E x v2) e0 ->
-                    Error E (EApp e1 e2)
+                    ResultIn E e1 (RValue (VFun E2 x e0)) ->
+                    ResultIn E e2 (RValue v2) ->
+                    ResultIn (EBind E x v2) e0 RError ->
+                    ResultIn E (EApp e1 e2) RError
     | E_AppErr5   : forall (E E2 : Env) (e1 e2 e0 : Exp)
                            (x y : Var) (v2 : Value),
-                    EvalTo E e1 (VRecFun E2 x y e0) -> EvalTo E e2 v2 ->
-                    Error (EBind (EBind E x (VRecFun E2 x y e0)) y v2) e0 ->
-                    Error E (EApp e1 e2)
+                    ResultIn E e1 (RValue (VRecFun E2 x y e0)) ->
+                    ResultIn E e2 (RValue v2) ->
+                    ResultIn (EBind (EBind E x (VRecFun E2 x y e0)) y v2)
+                             e0 RError->
+                    ResultIn E (EApp e1 e2) RError
     | E_LetRecErr : forall (E : Env) (e1 e2 : Exp) (x y : Var),
-                    Error (EBind E x (VRecFun E x y e1)) e2 ->
-                    Error E (ELetRec x y e1 e2)
+                    ResultIn (EBind E x (VRecFun E x y e1)) e2 RError ->
+                    ResultIn E (ELetRec x y e1 e2) RError
     | E_ConsErr1  : forall (E : Env) (e1 e2 : Exp),
-                    Error E e1 ->
-                    Error E (ECons e1 e2)
+                    ResultIn E e1 RError ->
+                    ResultIn E (ECons e1 e2) RError
     | E_ConsErr2  : forall (E : Env) (e1 e2 : Exp) (v1 : Value),
-                    EvalTo E e1 v1 -> Error E e2 ->
-                    Error E (ECons e1 e2)
+                    ResultIn E e1 (RValue v1) -> ResultIn E e2 RError ->
+                    ResultIn E (ECons e1 e2) RError
     | E_MatchErr1 : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var) (r : Result),
                     ResultIn E e1 r -> r <> RValue VNil ->
                     (forall v1 v2 : Value, r <> RValue (VCons v1 v2)) ->
-                    Error E (EMatch e1 e2 x y e3)
+                    ResultIn E (EMatch e1 e2 x y e3) RError
     | E_MatchErr2 : forall (E : Env) (e1 e2 e3 : Exp) (x y : Var),
-                    EvalTo E e1 VNil -> Error E e2 ->
-                    Error E (EMatch e1 e2 x y e3)
+                    ResultIn E e1 (RValue VNil) -> ResultIn E e2 RError ->
+                    ResultIn E (EMatch e1 e2 x y e3) RError
     | E_MatchErr3 : forall (E : Env) (e1 e2 e3 : Exp)
                            (x y : Var) (v1 v2 : Value),
-                    EvalTo E e1 (VCons v1 v2) ->
-                    Error (EBind (EBind E x v1) y v2) e3 ->
-                    Error E (EMatch e1 e2 x y e3)
-    with ResultIn : Env -> Exp -> Result -> Prop :=
-    | R_Value : forall (E : Env) (e : Exp) (v : Value),
-                EvalTo E e v -> ResultIn E e (RValue v)
-    | R_Error : forall (E : Env) (e : Exp),
-                Error E e -> ResultIn E e RError.
+                    ResultIn E e1 (RValue (VCons v1 v2)) ->
+                    ResultIn (EBind (EBind E x v1) y v2) e3 RError ->
+                    ResultIn E (EMatch e1 e2 x y e3) RError.
 
 (* Fig 8.6 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
@@ -209,134 +333,7 @@ Theorem type_safety_general :
     Typable C e t -> ResultIn E e r -> EnvCompat E C ->
     exists v : Value, r = RValue v /\ ValueCompat v t.
 Proof.
-    intros E C e r t Ht Hr.
-    generalize dependent t.
-    generalize dependent C.
-    induction Hr as [ E e v He | E e He ].
-
-        (* Case : Hr is from H_Value *)
-        induction He as [ E i | E b | E x v Hv |
-                          E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hp |
-                          E e1 e2 i1 i2 i3 He1 He1' He2 He2' Hm |
-                          E e1 e2 i1 i2 i3 He1 He1' He2 He2' Htm |
-                          E e1 e2 i1 i2 b3 He1 He1' He2 He2' Hl |
-                          E e1 e2 e3 v He1 He1' He2 He2' |
-                          E e1 e2 e3 v He1 He1' He3 He3' |
-                          E e1 e2 x v' v He1 He1' He2 He2' | E x e |
-                          E E2 e1 e2 e0 x v v2 He1 He1' He2 He2' He0 He0' |
-                          E x y e1 e2 v He2 He2' |
-                          E E2 e1 e2 e0 x y v v0 He1 He1' He2 He2' He0 He0' |
-                          E | E e1 e2 v1 v2 He1 He1' He2 He2' |
-                          E e1 e2 e3 v x y He1 He1' He2 He2' |
-                          E e1 e2 e3 x y v v1 v2 He1 He1' He3 He3' ].
-
-            (* Case : He is from E_Int *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i).
-            apply (conj eq_refl (VC_Int _)).
-
-            (* Case : He is from E_Bool *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VBool b).
-            apply (conj eq_refl (VC_Bool _)).
-
-            (* Case : He is from E_Var *)
-            admit.
-
-            (* Case : He is from E_Plus *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj eq_refl (VC_Int _)).
-
-            (* Case : He is from E_Minus *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj eq_refl (VC_Int _)).
-
-            (* Case : He is from E_Times *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VInt i3).
-            apply (conj eq_refl (VC_Int _)).
-
-            (* Case : He is from E_Lt *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VBool b3).
-            apply (conj eq_refl (VC_Bool _)).
-
-            (* Case : He is from E_IfT *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            apply (He2' _ _ H5 HC).
-
-            (* Case : He is from E_IfF *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            apply (He3' _ _ H6 HC).
-
-            (* Case : He is from E_Let *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' _ _ H4 HC).
-            destruct He1' as [v1 [Hv1 He1']].
-            inversion Hv1; subst.
-            apply (He2' _ _ H5 (EC_Bind _ _ _ _ _ HC He1')).
-
-            (* Case : He is from E_Fun *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists (VFun E x e).
-            apply (conj eq_refl (VC_Fun _ _ _ _ _ _ HC H3)).
-
-            (* Case : He is from E_App *)
-            admit.
-
-            (* Case : He is from E_LetRec *)
-            admit.
-
-            (* Case : He is from E_RecApp *)
-            admit.
-
-            (* Case : He is from E_Nil *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            exists VNil.
-            apply (conj eq_refl (VC_Nil _)).
-
-            (* Case : He is from E_Cons *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' _ _ H2 HC).
-            destruct He1' as [v1' [Hv1' He1']].
-            inversion Hv1'; subst.
-            specialize (He2' _ _ H4 HC).
-            destruct He2' as [v2' [Hv2' He2']].
-            inversion Hv2'; subst.
-            exists (VCons v1' v2').
-            apply (conj eq_refl (VC_Cons _ _ _ He1' He2')).
-
-            (* Case : He is from E_MatchNil *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            apply (He2' _ _ H7 HC).
-
-            (* Case : He is from E_MatchCons *)
-            intros C t Ht HC.
-            inversion Ht; subst.
-            specialize (He1' _ _ H6 HC).
-            destruct He1' as [v1' [Hv1' He1']].
-            inversion Hv1'; subst.
-            inversion He1'; subst.
-            apply (He3' _ _ H8 (EC_Bind _ _ _ _ _ (EC_Bind _ _ _ _ _ HC H2) H3)).
-
-        (* Case : Hh is from H_Error *)
-        admit.
-Qed.
+Admitted.
 
 (* Theorem 8.1 (1) *)
 Theorem Typable_safe_int :
