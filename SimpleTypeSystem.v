@@ -713,7 +713,21 @@ Theorem Typable_safe_list :
     Typable TEEmpty e (TList t) -> ResultIn EEmpty e r ->
     r = RValue VNil \/ exists v1 v2 : Value, r = RValue (VCons v1 v2).
 Proof.
-Admitted.
+    intros e r t He Hr.
+    assert (exists v : Value, r = RValue v /\ ValueCompat v (TList t)) as Hv.
+    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    destruct Hv as [v [Hv HList]].
+    inversion HList; subst.
+
+        (* Case : v = VNil *)
+        left.
+        reflexivity.
+
+        (* Case : v = VCons v1 v2 *)
+        right.
+        exists v1, v2.
+        reflexivity.
+Qed.
 
 End SimpleTypeSystem.
 
