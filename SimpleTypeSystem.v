@@ -675,8 +675,8 @@ Theorem Typable_safe_int :
     exists i : Z, r = RValue (VInt i).
 Proof.
     intros e r He Hr.
-    assert (exists v : Value, r = RValue v /\ ValueCompat v TInt) as Hv.
-    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    assert (exists v : Value, r = RValue v /\ ValueCompat v TInt) as Hv
+        by apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
     destruct Hv as [v [Hv HInt]].
     inversion HInt; subst.
     exists i.
@@ -690,8 +690,8 @@ Theorem Typable_safe_bool :
     exists b : bool, r = RValue (VBool b).
 Proof.
     intros e r He Hr.
-    assert (exists v : Value, r = RValue v /\ ValueCompat v TBool) as Hv.
-    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    assert (exists v : Value, r = RValue v /\ ValueCompat v TBool) as Hv
+        by apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
     destruct Hv as [v [Hv HBool]].
     inversion HBool; subst.
     exists b.
@@ -706,8 +706,8 @@ Theorem Typable_safe_fun :
          exists (E : Env) (x y : Var) (e : Exp), r = RValue (VRecFun E x y e).
 Proof.
     intros e r t1 t2 He Hr.
-    assert (exists v : Value, r = RValue v /\ ValueCompat v (TFun t1 t2)) as Hv.
-    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    assert (exists v : Value, r = RValue v /\ ValueCompat v (TFun t1 t2)) as Hv
+        by apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
     destruct Hv as [v [Hv HFun]].
     inversion HFun; subst.
 
@@ -729,8 +729,8 @@ Theorem Typable_safe_list :
     r = RValue VNil \/ exists v1 v2 : Value, r = RValue (VCons v1 v2).
 Proof.
     intros e r t He Hr.
-    assert (exists v : Value, r = RValue v /\ ValueCompat v (TList t)) as Hv.
-    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    assert (exists v : Value, r = RValue v /\ ValueCompat v (TList t)) as Hv
+        by apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
     destruct Hv as [v [Hv HList]].
     inversion HList; subst.
 
