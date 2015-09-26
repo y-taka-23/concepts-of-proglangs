@@ -702,7 +702,7 @@ Qed.
 Theorem Typable_safe_fun :
     forall (e : Exp) (r : Result) (t1 t2 : Types),
     Typable TEEmpty e (TFun t1 t2) -> ResultIn EEmpty e r ->
-    exists (E : Env) (x : Var) (e : Exp), r = RValue (VFun E x e) \/
+    (exists (E : Env) (x : Var) (e : Exp), r = RValue (VFun E x e)) \/
          exists (E : Env) (x y : Var) (e : Exp), r = RValue (VRecFun E x y e).
 Proof.
 Admitted.
