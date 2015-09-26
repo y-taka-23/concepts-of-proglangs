@@ -273,13 +273,13 @@ Inductive ResultIn : Env -> Exp -> Result -> Prop :=
     | E_AppErr4   : forall (E E2 : Env) (e1 e2 e0 : Exp) (x : Var) (v2 : Value),
                     ResultIn E e1 (RValue (VFun E2 x e0)) ->
                     ResultIn E e2 (RValue v2) ->
-                    ResultIn (EBind E x v2) e0 RError ->
+                    ResultIn (EBind E2 x v2) e0 RError ->
                     ResultIn E (EApp e1 e2) RError
     | E_AppErr5   : forall (E E2 : Env) (e1 e2 e0 : Exp)
                            (x y : Var) (v2 : Value),
                     ResultIn E e1 (RValue (VRecFun E2 x y e0)) ->
                     ResultIn E e2 (RValue v2) ->
-                    ResultIn (EBind (EBind E x (VRecFun E2 x y e0)) y v2)
+                    ResultIn (EBind (EBind E2 x (VRecFun E2 x y e0)) y v2)
                              e0 RError->
                     ResultIn E (EApp e1 e2) RError
     | E_LetRecErr : forall (E : Env) (e1 e2 : Exp) (x y : Var),
@@ -314,7 +314,8 @@ Inductive ValueCompat : Value -> Types -> Prop :=
                   ValueCompat (VFun E x e) (TFun t1 t2)
     | VC_RecFun : forall (E : Env) (C : TEnv) (e : Exp)
                          (x y : Var) (t1 t2 : Types),
-                  EnvCompat E C -> Typable (TEBind (TEBind C x t1) y t1) e t2 ->
+                  EnvCompat E C ->
+                  Typable (TEBind (TEBind C x (TFun t1 t2)) y t1) e t2 ->
                   ValueCompat (VRecFun E x y e) (TFun t1 t2)
     | VC_Nil    : forall t' : Types, ValueCompat VNil (TList t')
     | VC_Cons   : forall (t' : Types) (v1 v2 : Value),
