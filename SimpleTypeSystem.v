@@ -351,8 +351,29 @@ Proof.
                       E | E e1 e2 v1 v2 He1 He1' He2 He2' |
                       E e1 e2 e3 v x y He1 He1' He2 He2' |
                       E e1 e2 e3 x y v v1 v2 He1 He1' He3 He3' |
-                      | | | | | | | | | | | |
-                      | | | | | | | | | | | | ].
+                      E e1 e2 e3 r He1 He1' Hr |
+                      E e1 e2 e3 He1 He1' He2 He2' |
+                      E e1 e2 e3 He1 He1' He3 He3' |
+                      E e1 e2 r He1 He1' Hr |
+                      E e1 e2 i1 r He1 He1' He2 He2' Hr |
+                      E e1 e2 r He1 He1' Hr |
+                      E e1 e2 i1 r He1 He1' He2 He2' Hr |
+                      E e1 e2 r He1 He1' Hr |
+                      E e1 e2 i1 r He1 He1' He2 He2' Hr |
+                      E e1 e2 r He1 He1' Hr |
+                      E e1 e2 i1 r He1 He1' He2 He2' Hr |
+                      E x |
+                      E e1 e2 x He1 He1' | E e1 e2 x v1 He1 He1' He2 He2' |
+                      E e1 e2 r He1 He1' Hr1 Hr2 |
+                      E E2 e1 e2 e0 x He1 He1' He2 He2' |
+                      E E2 e1 e2 e0 x y He1 He1' He2 He2' |
+                      E E2 e1 e2 e0 x v2 He1 He1' He2 He2' He0 He0' |
+                      E E2 e1 e2 e0 x y v2 He1 He1' He2 He2' He0 He0' |
+                      E e1 e2 x y He2 He2' |
+                      E e1 e2 He1 He1' | E e1 e2 v He1 He1' He2 He2' |
+                      E e1 e2 e3 x y r He1 He1' Hr |
+                      E e1 e2 e3 x y He1 He1' He2 He2' |
+                      E e1 e2 e3 x y v1 v2 He1 He1' He3 He3' ].
 
         (* Case : Hr is from E_Int *)
         intros C t Ht HC.
@@ -457,7 +478,195 @@ Proof.
         inversion Hv'; subst.
         inversion He1'; subst.
         apply (He3' _ _ H8 (EC_Bind _ _ _ _ _ (EC_Bind _ _ _ _ _ HC H2) H3)).
-Admitted.
+
+        (* Case : Hr is from E_IfErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H3 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+        specialize (Hr b).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_IfErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He2' _ _ H5 HC).
+
+        (* Case : Hr is from E_IfErr3 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He3' _ _ H6 HC).
+
+        (* Case : Hr is from E_PlusErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_PlusErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        inversion He2'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_MinusErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_MinusErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        inversion He2'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_TimesErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_TimesErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        inversion He2'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_LtErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_LtErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        inversion He2'; subst.
+        specialize (Hr i).
+        contradict Hr.
+        reflexivity.
+
+        (* Case : Hr is from E_VarErr *)
+        admit.
+
+        (* Case : Hr is from E_LetErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H4 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        discriminate.
+
+        (* Case : Hr is from E_LetErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H4 HC).
+        destruct He1' as [v1' [Hv1' He1']].
+        inversion Hv1'; subst.
+        apply (He2' _ _ H5 (EC_Bind _ _ _ _ _ HC He1')).
+
+        (* Case : Hr is from E_AppErr1 *)
+        admit.
+
+        (* Case : Hr is from E_AppErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        discriminate.
+
+        (* Case : Hr is from E_AppErr3 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        discriminate.
+
+        (* Case : Hr is from E_AppErr4 *)
+        admit.
+
+        (* Case : Hr is from E_AppErr5 *)
+        admit.
+
+        (* Case : Hr is from E_LetRecErr *)
+        admit.
+
+        (* Case : Hr is from E_ConsErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H2 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        discriminate.
+
+        (* Case : Hr is from E_ConsErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He2' _ _ H4 HC).
+        destruct He2' as [v2 [Hv2 He2']].
+        discriminate.
+
+        (* Case : Hr is from E_MatchErr1 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H7 HC).
+        destruct He1' as [v1 [Hv1 He1']].
+        inversion He1'; subst.
+
+            (* Case : He1' is from VC_Nil *)
+            contradict Hr.
+            reflexivity.
+
+            (* Case : He1' is from VC_Cons *)
+            specialize (H v0 v2).
+            contradict H.
+            reflexivity.
+
+        (* Case : Hr is from E_MatchErr2 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        apply (He2' _ _ H7 HC).
+
+        (* Case : Hr is from E_MatchErr3 *)
+        intros C t Ht HC.
+        inversion Ht; subst.
+        specialize (He1' _ _ H6 HC).
+        destruct He1' as [v' [Hv' He1']].
+        inversion Hv'; subst.
+        inversion He1'; subst.
+        apply (He3' _ _ H8 (EC_Bind _ _ _ _ _ (EC_Bind _ _ _ _ _ HC H2) H3)).
+Qed.
 
 (* Theorem 8.1 (1) *)
 Theorem Typable_safe_int :
