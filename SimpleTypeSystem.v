@@ -705,7 +705,22 @@ Theorem Typable_safe_fun :
     (exists (E : Env) (x : Var) (e : Exp), r = RValue (VFun E x e)) \/
          exists (E : Env) (x y : Var) (e : Exp), r = RValue (VRecFun E x y e).
 Proof.
-Admitted.
+    intros e r t1 t2 He Hr.
+    assert (exists v : Value, r = RValue v /\ ValueCompat v (TFun t1 t2)) as Hv.
+    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    destruct Hv as [v [Hv HFun]].
+    inversion HFun; subst.
+
+        (* Case : v is non-recursive function *)
+        left.
+        exists E, x, e0.
+        reflexivity.
+
+        (* Case : v is recursive function *)
+        right.
+        exists E, x, y, e0.
+        reflexivity.
+Qed.
 
 (* Theorem 8.1 (4) *)
 Theorem Typable_safe_list :
