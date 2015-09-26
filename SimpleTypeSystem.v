@@ -674,7 +674,14 @@ Theorem Typable_safe_int :
     Typable TEEmpty e TInt -> ResultIn EEmpty e r ->
     exists i : Z, r = RValue (VInt i).
 Proof.
-Admitted.
+    intros e r He Hr.
+    assert (exists v : Value, r = RValue v /\ ValueCompat v TInt) as Hv.
+    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    destruct Hv as [v [Hv HInt]].
+    inversion HInt; subst.
+    exists i.
+    reflexivity.
+Qed.
 
 (* Theorem 8.1 (2) *)
 Theorem Typable_safe_bool :
