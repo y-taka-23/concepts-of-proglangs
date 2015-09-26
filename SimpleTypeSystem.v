@@ -689,7 +689,14 @@ Theorem Typable_safe_bool :
     Typable TEEmpty e TBool -> ResultIn EEmpty e r ->
     exists b : bool, r = RValue (VBool b).
 Proof.
-Admitted.
+    intros e r He Hr.
+    assert (exists v : Value, r = RValue v /\ ValueCompat v TBool) as Hv.
+    apply (type_safety_general _ _ _ _ _ He Hr EC_Empty).
+    destruct Hv as [v [Hv HBool]].
+    inversion HBool; subst.
+    exists b.
+    reflexivity.
+Qed.
 
 (* Theorem 8.1 (3) *)
 Theorem Typable_safe_fun :
