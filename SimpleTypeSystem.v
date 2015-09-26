@@ -347,7 +347,7 @@ Proof.
                       E e1 e2 e3 v He1 He1' He3 He3' |
                       E e1 e2 x v1 v He1 He1' He2 He2' | E x e |
                       E E2 e1 e2 e0 x v v2 He1 He1' He2 He2' He0 He0' |
-                      E x y e1 e2 v He1 He1' |
+                      E x y e1 e2 v He2 He2' |
                       E E2 e1 e2 e0 x y v v2 He1 He1' He2 He2' He0 He0' |
                       E | E e1 e2 v1 v2 He1 He1' He2 He2' |
                       E e1 e2 e3 v x y He1 He1' He2 He2' |
