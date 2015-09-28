@@ -180,10 +180,10 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                  Typable C (EMatch e1 e2 x y e3) t.
 
 Inductive no_conflict_scheme : TySubst -> TyScheme -> Prop :=
-    | NC_Sch : forall (S : TySubst) (s : TyScheme) (a : TyVar),
-               in_vars s a ->
-               (S a = None \/ forall (bi : TyVar) (ti : Types),
-                              S bi = Some ti -> ~ is_FTV_type ti (TVar a)) ->
+    | NC_Sch : forall (S : TySubst) (s : TyScheme),
+               (forall ai : TyVar, in_vars s ai -> S ai = None) ->
+               (forall (ai bi : TyVar) (ti : Types),
+                in_vars s ai -> S bi = Some ti -> ~ is_FTV_type ti (TVar ai)) ->
                no_conflict_scheme S s.
 
 Inductive no_conflict_env : TySubst -> TEnv -> Prop :=
