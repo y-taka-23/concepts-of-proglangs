@@ -81,24 +81,22 @@ Inductive has_type : TEnv -> Var -> TyScheme -> Prop :=
 
 (* Fig 9.1 *)
 Definition TySubst := TyVar -> option Types.
-Inductive type_subst : TySubst -> Types -> Types -> Prop :=
-    | Sub_Var1 : forall (S : TySubst) (ai : TyVar) (ti : Types),
-                 S ai = Some ti -> type_subst S (TVar ai) ti
-    | Sub_Var2 : forall (S : TySubst) (a : TyVar),
-                 S a = None -> type_subst S (TVar a) (TVar a)
-    | Sub_Bool : forall S : TySubst, type_subst S TBool TBool
-    | Sub_Int  : forall S : TySubst, type_subst S TInt TInt
-    | Sub_Fun  : forall (S : TySubst) (t' t'' t1 t2 : Types),
-                 type_subst S t' t1 -> type_subst S t'' t2 ->
-                 type_subst S (TFun t' t'') (TFun t1 t2)
-    | Sub_List : forall (S : TySubst) (t0 t0' : Types),
-                 type_subst S t0 t0' ->
-                 type_subst S (TList t0) (TList t0').
+Fixpoint subst_Types (S : TySubst) (t : Types) : Types :=
+    match t with
+    | TVar ai    => match S ai with
+                    | Some ti => ti
+                    | None    => TVar ai
+                    end
+    | TBool      => TBool
+    | TInt       => TInt
+    | TFun t1 t2 => TFun (subst_Types S t1) (subst_Types S t2)
+    | TList t0   => TList (subst_Types S t0)
+    end.
 
 (* Def 9.1 *)
 Inductive is_instance : TyScheme -> Types -> Prop :=
     | Inst : forall (s : TyScheme) (S : TySubst) (t t0 : Types),
-             is_type s t0 -> type_subst S t0 t -> is_instance s t.
+             is_type s t0 -> t = subst_Types S t0 -> is_instance s t.
 
 (* Def 9.2 (Fig 9.2, for types) *)
 Inductive is_FTV_type : Types -> Types -> Prop :=
