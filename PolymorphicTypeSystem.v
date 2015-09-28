@@ -179,5 +179,60 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType (TList t'))) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
+Inductive no_conflict_scheme : TySubst -> TyScheme -> Prop :=
+    | NC_Sch : forall (S : TySubst) (s : TyScheme) (a : TyVar),
+               in_vars s a ->
+               (S a = None \/ forall (bi : TyVar) (ti : Types),
+                              S bi = Some ti -> ~ is_FTV_type ti (TVar a)) ->
+               no_conflict_scheme S s.
+
+Inductive no_conflict_env : TySubst -> TEnv -> Prop :=
+    | NC_Empty : forall S : TySubst, no_conflict_env S TEEmpty
+    | NC_Bind  : forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
+                 no_conflict_env S C -> no_conflict_scheme S s ->
+                 no_conflict_env S (TEBind C x s).
+
+Lemma no_conflict_cons :
+    forall (S : TySubst) (a : TyVar) (s : TyScheme),
+    no_conflict_scheme S (TSCons a s) -> no_conflict_scheme S s.
+Proof.
+Admitted.
+
+(* Substitution for type schemes *)
+Fixpoint subst_TyScheme (S : TySubst) (s : TyScheme)
+                        (H : no_conflict_scheme S s) : TyScheme.
+    induction s as [t | a s' H' ].
+        apply (TSType (subst_Types S t)).
+        apply (TSCons a (H' (no_conflict_cons S a s' H))).
+Defined.
+
+Lemma no_conflict_env_scheme :
+    forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
+    no_conflict_env S (TEBind C x s) -> no_conflict_scheme S s.
+Proof.
+Admitted.
+
+Lemma no_conflict_bind :
+    forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
+    no_conflict_env S (TEBind C x s) -> no_conflict_env S C.
+Proof.
+Admitted.
+
+(* Substitution for type environments *)
+Fixpoint subst_TEnv (S : TySubst) (C : TEnv) (H : no_conflict_env S C) : TEnv.
+    induction C as [| C' H' x s ].
+        apply TEEmpty.
+        apply (TEBind (H' (no_conflict_bind S C' x s H)) x
+                      (subst_TyScheme S s (no_conflict_env_scheme S C' x s H))).
+Defined.
+
+(* Lemma 9.3 *)
+Lemma Typable_subst_compat :
+    forall (C : TEnv) (e : Exp) (t : Types) (S : TySubst)
+           (H : no_conflict_env S C),
+    Typable C e t -> Typable (subst_TEnv S C H) e (subst_Types S t).
+Proof.
+Admitted.
+
 End PolymorphicTypeSystem.
 
