@@ -196,7 +196,18 @@ Lemma no_conflict_cons :
     forall (S : TySubst) (a : TyVar) (s : TyScheme),
     no_conflict_scheme S (TSCons a s) -> no_conflict_scheme S s.
 Proof.
-Admitted.
+    intros S a s H.
+    inversion H; subst.
+    apply NC_Sch.
+
+        (* Proof : {a1, ..., an} and {b1, ..., bn} are disjoint *)
+        intros ai Hai.
+        apply (H0 _ (IV_Cons2 _ _ _ Hai)).
+
+        (* Proof : {a1, ..., an} are not in FTV(t1), ..., FTV(tn) *)
+        intros ai bi ti Hai Hbi.
+        apply (H1 _ _ _ (IV_Cons2 _ _ _ Hai) Hbi).
+Qed.
 
 (* Substitution for type schemes *)
 Fixpoint subst_TyScheme (S : TySubst) (s : TyScheme)
@@ -210,13 +221,19 @@ Lemma no_conflict_env_scheme :
     forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
     no_conflict_env S (TEBind C x s) -> no_conflict_scheme S s.
 Proof.
-Admitted.
+    intros S C x s H.
+    inversion H; subst.
+    apply H5.
+Qed.
 
 Lemma no_conflict_bind :
     forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
     no_conflict_env S (TEBind C x s) -> no_conflict_env S C.
 Proof.
-Admitted.
+    intros S C x s H.
+    inversion H; subst.
+    apply H3.
+Qed.
 
 (* Substitution for type environments *)
 Fixpoint subst_TEnv (S : TySubst) (C : TEnv) (H : no_conflict_env S C) : TEnv.
