@@ -249,7 +249,92 @@ Lemma Typable_subst_compat :
            (H : no_conflict_env S C),
     Typable C e t -> Typable (subst_TEnv S C H) e (subst_Types S t).
 Proof.
-Admitted.
+    intros C e.
+    generalize dependent C.
+    induction e as [ i | b | x |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
+                     x e0 He0 | e1 He1 e2 He2 | x y e1 He1 e2 He2 | |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 x y e3 He3 ].
+
+        (* Case : e = EInt i *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply T_Int.
+
+        (* Case : e = EBool b *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply T_Bool.
+
+        (* Case : e = EVar x *)
+        admit.
+
+        (* Case : e = EPLus e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply (T_Plus _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
+
+        (* Case : e = EMinus e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply (T_Minus _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
+
+        (* Case : e = ETimes e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply (T_Times _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
+
+        (* Case : e = ELt e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply (T_Lt _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
+
+        (* Case : e = EIf e1 e2 e3 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        apply (T_If _ _ _ _ _
+                    (He1 _ _ _ _ H4) (He2 _ _ _ _ H6) (He3 _ _ _ _ H7)).
+
+        (* Case : e = ELet x e1 e2 *)
+        admit.
+
+        (* Case : e = EFun x e0 *)
+        admit.
+
+        (* Case : e = EApp e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        refine (T_App _ _ _ (subst_Types S t1) _ _ (He2 _ _ _ _ H5)).
+        change (Typable (subst_TEnv S C H) e1 (subst_Types S (TFun t1 t))).
+        apply (He1 _ _ _ _ H3).
+
+        (* Case : e = LetRec x y e1 e2 *)
+        admit.
+
+        (* Case : e = ENil *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        apply T_Nil.
+
+        (* Case : e = ECons e1 e2 *)
+        intros C t S H Ht.
+        inversion Ht; subst.
+        simpl.
+        apply (T_Cons _ _ _ _ (He1 _ _ _ _ H3)).
+        change (Typable (subst_TEnv S C H) e2 (subst_Types S (TList t0))).
+        apply (He2 _ _ _ _ H5).
+
+        (* Case : e = EMatch e1 e2 x y e3 *)
+        admit.
+Qed.
 
 End PolymorphicTypeSystem.
 
