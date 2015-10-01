@@ -81,22 +81,23 @@ Inductive has_type : TEnv -> Var -> TyScheme -> Prop :=
 
 (* Fig 9.1 *)
 Definition TySubst := TyVar -> option Types.
-Fixpoint subst_Types (S : TySubst) (t : Types) : Types :=
-    match t with
-    | TVar ai    => match S ai with
-                    | Some ti => ti
-                    | None    => TVar ai
-                    end
-    | TBool      => TBool
-    | TInt       => TInt
-    | TFun t1 t2 => TFun (subst_Types S t1) (subst_Types S t2)
-    | TList t0   => TList (subst_Types S t0)
-    end.
+Inductive subst_type : TySubst -> Types -> Types -> Prop :=
+    | Sub_Var1 : forall (S : TySubst) (ai : TyVar) (ti : Types),
+                 S ai = Some ti -> subst_type S (TVar ai) ti
+    | Sub_Var2 : forall (S : TySubst) (a : TyVar),
+                 S a = None -> subst_type S (TVar a) (TVar a)
+    | Sub_Bool : forall S : TySubst, subst_type S TBool TBool
+    | Sub_Int  : forall S : TySubst, subst_type S TInt TInt
+    | Sub_Fun  : forall (S : TySubst) (t1 t2 t1' t2': Types),
+                 subst_type S t1 t1' -> subst_type S t2 t2' ->
+                 subst_type S (TFun t1 t2) (TFun t1' t2')
+    | Sub_List : forall (S : TySubst) (t0 t0': Types),
+                 subst_type S t0 t0' -> subst_type S (TList t0) (TList t0').
 
 (* Def 9.1 *)
 Inductive is_instance : TyScheme -> Types -> Prop :=
     | Inst : forall (s : TyScheme) (S : TySubst) (t t0 : Types),
-             is_type s t0 -> t = subst_Types S t0 -> is_instance s t.
+             is_type s t0 -> subst_type S t0 t -> is_instance s t.
 
 (* Def 9.2 (Fig 9.2, for types) *)
 Inductive is_FTV_type : Types -> Types -> Prop :=
@@ -179,162 +180,35 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType (TList t'))) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
-Inductive no_conflict_scheme : TySubst -> TyScheme -> Prop :=
-    | NC_Sch : forall (S : TySubst) (s : TyScheme),
-               (forall ai : TyVar, in_vars s ai -> S ai = None) ->
-               (forall (ai bi : TyVar) (ti : Types),
-                in_vars s ai -> S bi = Some ti -> ~ is_FTV_type ti (TVar ai)) ->
-               no_conflict_scheme S s.
-
-Inductive no_conflict_env : TySubst -> TEnv -> Prop :=
-    | NC_Empty : forall S : TySubst, no_conflict_env S TEEmpty
-    | NC_Bind  : forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
-                 no_conflict_env S C -> no_conflict_scheme S s ->
-                 no_conflict_env S (TEBind C x s).
-
-Lemma no_conflict_cons :
-    forall (S : TySubst) (a : TyVar) (s : TyScheme),
-    no_conflict_scheme S (TSCons a s) -> no_conflict_scheme S s.
-Proof.
-    intros S a s H.
-    inversion H; subst.
-    apply NC_Sch.
-
-        (* Proof : {a1, ..., an} and {b1, ..., bn} are disjoint *)
-        intros ai Hai.
-        apply (H0 _ (IV_Cons2 _ _ _ Hai)).
-
-        (* Proof : {a1, ..., an} are not in FTV(t1), ..., FTV(tn) *)
-        intros ai bi ti Hai Hbi.
-        apply (H1 _ _ _ (IV_Cons2 _ _ _ Hai) Hbi).
-Qed.
+Inductive no_conflict : TySubst -> TyScheme -> Prop :=
+    | NoCon : forall (S : TySubst) (s : TyScheme),
+              (forall ai : TyVar, in_vars s ai -> S ai = None) ->
+              (forall (ai bi : TyVar) (ti : Types),
+               in_vars s ai -> S bi = Some ti -> ~ is_FTV_type ti (TVar ai)) ->
+              no_conflict S s.
 
 (* Substitution for type schemes *)
-Fixpoint subst_TyScheme (S : TySubst) (s : TyScheme)
-                        (H : no_conflict_scheme S s) : TyScheme.
-    induction s as [t | a s' H' ].
-        apply (TSType (subst_Types S t)).
-        apply (TSCons a (H' (no_conflict_cons S a s' H))).
-Defined.
-
-Lemma no_conflict_env_scheme :
-    forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
-    no_conflict_env S (TEBind C x s) -> no_conflict_scheme S s.
-Proof.
-    intros S C x s H.
-    inversion H; subst.
-    apply H5.
-Qed.
-
-Lemma no_conflict_bind :
-    forall (S : TySubst) (C : TEnv) (x : Var) (s : TyScheme),
-    no_conflict_env S (TEBind C x s) -> no_conflict_env S C.
-Proof.
-    intros S C x s H.
-    inversion H; subst.
-    apply H3.
-Qed.
+Inductive subst_scheme : TySubst -> TyScheme -> TyScheme -> Prop :=
+    | Sub_Type : forall (S : TySubst) (t t' : Types),
+                 subst_type S t t' -> subst_scheme S (TSType t) (TSType t')
+    | Sub_Cons : forall (S : TySubst) (a : TyVar) (s s' : TyScheme),
+                 no_conflict S s -> subst_scheme S (TSCons a s) (TSCons a s').
 
 (* Substitution for type environments *)
-Fixpoint subst_TEnv (S : TySubst) (C : TEnv) (H : no_conflict_env S C) : TEnv.
-    induction C as [| C' H' x s ].
-        apply TEEmpty.
-        apply (TEBind (H' (no_conflict_bind S C' x s H)) x
-                      (subst_TyScheme S s (no_conflict_env_scheme S C' x s H))).
-Defined.
+Inductive subst_env : TySubst -> TEnv -> TEnv -> Prop :=
+    | Sub_Empty : forall S : TySubst, subst_env S TEEmpty TEEmpty
+    | Sub_Bind  : forall (S : TySubst) (C C' : TEnv) (x : Var)
+                         (s s': TyScheme),
+                  subst_env S C C' -> subst_scheme S s s' ->
+                  subst_env S (TEBind C x s) (TEBind C' x s').
 
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
-    forall (C : TEnv) (e : Exp) (t : Types) (S : TySubst)
-           (H : no_conflict_env S C),
-    Typable C e t -> Typable (subst_TEnv S C H) e (subst_Types S t).
+    forall (C C' : TEnv) (e : Exp) (t t' : Types) (S : TySubst),
+    Typable C e t -> subst_env S C C' -> subst_type S t t' ->
+    Typable C' e t'.
 Proof.
-    intros C e.
-    generalize dependent C.
-    induction e as [ i | b | x |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 |
-                     e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 |
-                     x e0 He0 | e1 He1 e2 He2 | x y e1 He1 e2 He2 | |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 x y e3 He3 ].
-
-        (* Case : e = EInt i *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply T_Int.
-
-        (* Case : e = EBool b *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply T_Bool.
-
-        (* Case : e = EVar x *)
-        admit.
-
-        (* Case : e = EPLus e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply (T_Plus _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
-
-        (* Case : e = EMinus e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply (T_Minus _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
-
-        (* Case : e = ETimes e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply (T_Times _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
-
-        (* Case : e = ELt e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply (T_Lt _ _ _ (He1 _ _ _ _ H3) (He2 _ _ _ _ H5)).
-
-        (* Case : e = EIf e1 e2 e3 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        apply (T_If _ _ _ _ _
-                    (He1 _ _ _ _ H4) (He2 _ _ _ _ H6) (He3 _ _ _ _ H7)).
-
-        (* Case : e = ELet x e1 e2 *)
-        admit.
-
-        (* Case : e = EFun x e0 *)
-        admit.
-
-        (* Case : e = EApp e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        refine (T_App _ _ _ (subst_Types S t1) _ _ (He2 _ _ _ _ H5)).
-        change (Typable (subst_TEnv S C H) e1 (subst_Types S (TFun t1 t))).
-        apply (He1 _ _ _ _ H3).
-
-        (* Case : e = LetRec x y e1 e2 *)
-        admit.
-
-        (* Case : e = ENil *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        apply T_Nil.
-
-        (* Case : e = ECons e1 e2 *)
-        intros C t S H Ht.
-        inversion Ht; subst.
-        simpl.
-        apply (T_Cons _ _ _ _ (He1 _ _ _ _ H3)).
-        change (Typable (subst_TEnv S C H) e2 (subst_Types S (TList t0))).
-        apply (He2 _ _ _ _ H5).
-
-        (* Case : e = EMatch e1 e2 x y e3 *)
-        admit.
-Qed.
+Admitted.
 
 End PolymorphicTypeSystem.
 
