@@ -208,7 +208,99 @@ Lemma Typable_subst_compat :
     Typable C e t -> subst_env S C C' -> subst_type S t t' ->
     Typable C' e t'.
 Proof.
-Admitted.
+    intros C C' e.
+    generalize dependent C'.
+    generalize dependent C.
+    induction e as [ i | b | x |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 | x e1 He1 |
+                     e1 He1 e2 He2 | x y e1 He1 e2 He2 | |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 x y e3 He3 ].
+
+        (* Case : e = EInt i *)
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply T_Int.
+
+        (* Case : e = EBool b *)
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply T_Bool.
+
+        (* Case : e = EVar x *)
+        admit.
+
+        (* Case : e = EPlus e1 e2 *)
+        intros C C' t t' S Ht Hes Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply (T_Plus _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
+                            (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
+
+        (* Case : e = EMinus e1 e2 *)
+        intros C C' t t' S Ht Hes Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply (T_Minus _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
+                             (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
+
+        (* Case : e = ETimes e1 e2 *)
+        intros C C' t t' S Ht Hes Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply (T_Times _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
+                             (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
+
+        (* Case : e = ELt e1 e2 *)
+        intros C C' t t' S Ht Hes Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply (T_Lt _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
+                          (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
+
+        (* Case : e = EIf e1 e2 e3 *)
+        intros C C' t t' S Ht Hes Hst.
+        inversion Ht; subst.
+        apply (T_If _ _ _ _ _ (He1 _ _ _ _ _ H3 Hes (Sub_Bool _))
+                              (He2 _ _ _ _ _ H5 Hes Hst)
+                              (He3 _ _ _ _ _ H6 Hes Hst)).
+
+        (* Case : e = ELet x e1 e2 *)
+        admit.
+
+        (* Case : e = EFun x e1 *)
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply T_Fun.
+        refine (He1 _ _ _ _ _ H3 _ H5).
+        apply (Sub_Bind _ _ _ _ _ _ Hse (Sub_Type _ _ _ H2)).
+
+        (* Case : e = EApp e1 e2 *)
+        admit.
+
+        (* Case : e = ELetRec x y e1 e2 *)
+        admit.
+
+        (* Case : e = ENil *)
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply T_Nil.
+
+        (* Case : e = ECons e1 e2 *)
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        inversion Hst; subst.
+        apply (T_Cons _ _ _ _ (He1 _ _ _ _ _ H2 Hse H1)
+                              (He2 _ _ _ _ _ H4 Hse (Sub_List _ _ _ H1))).
+
+        (* Case : e = EMatch x y e1 e2 e3 *)
+        admit.
+Qed.
 
 End PolymorphicTypeSystem.
 
