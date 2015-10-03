@@ -192,7 +192,8 @@ Inductive subst_scheme : TySubst -> TyScheme -> TyScheme -> Prop :=
     | Sub_Type : forall (S : TySubst) (t t' : Types),
                  subst_type S t t' -> subst_scheme S (TSType t) (TSType t')
     | Sub_Cons : forall (S : TySubst) (a : TyVar) (s s' : TyScheme),
-                 no_conflict S s -> subst_scheme S (TSCons a s) (TSCons a s').
+                 no_conflict S s -> S a = None ->
+                 subst_scheme S (TSCons a s) (TSCons a s').
 
 (* Substitution for type environments *)
 Inductive subst_env : TySubst -> TEnv -> TEnv -> Prop :=
