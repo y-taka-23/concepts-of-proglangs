@@ -202,6 +202,45 @@ Inductive subst_env : TySubst -> TEnv -> TEnv -> Prop :=
                   subst_env S C C' -> subst_scheme S s s' ->
                   subst_env S (TEBind C x s) (TEBind C' x s').
 
+Lemma subst_type_close :
+    forall (S : TySubst) (t : Types),
+    exists t' : Types, subst_type S t t'.
+Proof.
+    intros S t.
+    induction t as [ a | | | t1 Ht1 t2 Ht2 | t0 Ht0 ].
+
+        (* Case : t = TVar a *)
+        remember (S a) as Ha.
+        destruct Ha as [ ti | ].
+
+            (* Case : S a = Some ti *)
+            exists ti. Print eq_sym.
+            apply (Sub_Var1 _ _ _ (eq_sym HeqHa)).
+
+            (* Case : S a = None *)
+            exists (TVar a).
+            apply (Sub_Var2 _ _ (eq_sym HeqHa)).
+
+        (* Case : t = TBool *)
+        exists TBool.
+        apply Sub_Bool.
+
+        (* Case : t = TInt *)
+        exists TInt.
+        apply Sub_Int.
+
+        (* Case : t = TFun t1 t2 *)
+        destruct Ht1 as [t1' Ht1'].
+        destruct Ht2 as [t2' Ht2'].
+        exists (TFun t1' t2').
+        apply (Sub_Fun _ _ _ _ _ Ht1' Ht2').
+
+        (* Case : t = TList t0 *)
+        destruct Ht0 as [t0' Ht0'].
+        exists (TList t0').
+        apply (Sub_List _ _ _ Ht0').
+Qed.
+
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
     forall (C C' : TEnv) (e : Exp) (t t' : Types) (S : TySubst),
@@ -280,7 +319,14 @@ Proof.
         apply (Sub_Bind _ _ _ _ _ _ Hse (Sub_Type _ _ _ H2)).
 
         (* Case : e = EApp e1 e2 *)
-        admit.
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        assert (exists t1', subst_type S t1 t1') as Ht1'
+            by apply subst_type_close .
+        destruct Ht1' as [t1' Ht1'].
+        apply (T_App _ _ _ _ _
+                     (He1 _ _ _ _ _ H2 Hse (Sub_Fun _ _ _ _ _ Ht1' Hst))
+                     (He2 _ _ _ _ _ H4 Hse Ht1')).
 
         (* Case : e = ELetRec x y e1 e2 *)
         admit.
