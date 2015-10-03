@@ -241,31 +241,6 @@ Proof.
         apply (Sub_List _ _ _ Ht0').
 Qed.
 
-Lemma subst_scheme_close :
-    forall (S : TySubst) (s : TyScheme),
-    exists s' : TyScheme, subst_scheme S s s'.
-Proof.
-Admitted.
-
-Lemma subst_env_close :
-    forall (S : TySubst) (C : TEnv),
-    exists C' : TEnv, subst_env S C C'.
-Proof.
-    intros S C.
-    induction C as [ | C0 HC0 x s ].
-
-        (* Case : C = TEEmpty *)
-        exists TEEmpty.
-        apply Sub_Empty.
-
-        (* Case : C = TEBind C0 x s *)
-        destruct HC0 as [C0' HC0'].
-        remember (subst_scheme_close S s) as Hs'; clear HeqHs'.
-        destruct Hs' as [s' Hs'].
-        exists (TEBind C0' x s').
-        apply (Sub_Bind _ _ _ _ _ _ HC0' Hs').
-Qed.
-
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
     forall (C C' : TEnv) (e : Exp) (t t' : Types) (S : TySubst),
@@ -399,12 +374,6 @@ Inductive ValueCompat : Value -> Types -> Prop :=
                  EnvCompat E' C' -> ValueCompat v t -> is_type s t ->
                  EnvCompat (EBind E' x v) (TEBind C' x s).
 
-Lemma EnvCompat_subst_compat :
-    forall (S : TySubst) (E : Env) (C C' : TEnv),
-    EnvCompat E C -> subst_env S C C' -> EnvCompat E C'.
-Proof.
-Admitted.
-
 (* Lemma 9.5 *)
 Lemma ValueCompat_subst_compat :
     forall (S : TySubst) (v : Value) (t t' : Types),
@@ -426,26 +395,10 @@ Proof.
         apply VC_Bool.
 
         (* Case : v = VFun E x e0 *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        remember (subst_env_close S C) as HC'; clear HeqHC'.
-        destruct HC' as [C' HC'].
-        apply (VC_Fun _ _ _ _ _ _ (EnvCompat_subst_compat _ _ _ _ H3 HC')).
-        refine (Typable_subst_compat _ _ _ _ _ _ H4 _ H6).
-        apply (Sub_Bind _ _ _ _ _ _ HC' (Sub_Type _ _ _ H2)).
+        admit.
 
         (* Case : v = VRecFun E x y e0 *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        remember (subst_env_close S C) as HC'; clear HeqHC'.
-        destruct HC' as [C' HC'].
-        apply (VC_RecFun _ _ _ _ _ _ _ (EnvCompat_subst_compat _ _ _ _ H4 HC')).
-        refine (Typable_subst_compat _ _ _ _ _ _ H5 _ H6).
-        refine (Sub_Bind _ _ _ _ _ _ _ (Sub_Type _ _ _ H2)).
-        apply (Sub_Bind _ _ _ _ _ _ HC'
-                        (Sub_Type _ _ _ (Sub_Fun _ _ _ _ _ H2 H6))).
+        admit.
 
         (* Case : v = VNil *)
         intros t t' Hvc Hst.
