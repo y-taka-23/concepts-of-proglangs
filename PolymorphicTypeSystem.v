@@ -262,11 +262,11 @@ Proof.
                           (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
 
         (* Case : e = EIf e1 e2 e3 *)
-        intros C C' t t' S Ht Hes Hst.
+        intros C C' t t' S Ht Hse Hst.
         inversion Ht; subst.
-        apply (T_If _ _ _ _ _ (He1 _ _ _ _ _ H3 Hes (Sub_Bool _))
-                              (He2 _ _ _ _ _ H5 Hes Hst)
-                              (He3 _ _ _ _ _ H6 Hes Hst)).
+        apply (T_If _ _ _ _ _ (He1 _ _ _ _ _ H3 Hse (Sub_Bool _))
+                              (He2 _ _ _ _ _ H5 Hse Hst)
+                              (He3 _ _ _ _ _ H6 Hse Hst)).
 
         (* Case : e = ELet x e1 e2 *)
         admit.
