@@ -321,8 +321,7 @@ Proof.
         (* Case : e = EApp e1 e2 *)
         intros C C' t t' S Ht Hse Hst.
         inversion Ht; subst.
-        assert (exists t1', subst_type S t1 t1') as Ht1'
-            by apply subst_type_close .
+        remember (subst_type_close S t1) as Ht1'; clear HeqHt1'.
         destruct Ht1' as [t1' Ht1'].
         apply (T_App _ _ _ _ _
                      (He1 _ _ _ _ _ H2 Hse (Sub_Fun _ _ _ _ _ Ht1' Hst))
