@@ -97,7 +97,9 @@ Inductive subst_type : TySubst -> Types -> Types -> Prop :=
 (* Def 9.1 *)
 Inductive is_instance : TyScheme -> Types -> Prop :=
     | Inst : forall (s : TyScheme) (S : TySubst) (t t0 : Types),
-             is_type s t0 -> subst_type S t0 t -> is_instance s t.
+             is_type s t0 -> subst_type S t0 t ->
+             (forall (a : TyVar) (t : Types), S a = Some t <-> in_vars s a) ->
+             is_instance s t.
 
 (* Def 9.2 (Fig 9.2, for types) *)
 Inductive is_FTV_type : Types -> Types -> Prop :=
