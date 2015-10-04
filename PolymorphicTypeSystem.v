@@ -180,19 +180,19 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType (TList t'))) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
-Inductive no_conflict : TySubst -> TyScheme -> Prop :=
-    | NoCon : forall (S : TySubst) (s : TyScheme),
-              (forall ai : TyVar, in_vars s ai -> S ai = None) ->
-              (forall (ai bi : TyVar) (ti : Types),
-               in_vars s ai -> S bi = Some ti -> ~ is_FTV_type ti (TVar ai)) ->
-              no_conflict S s.
+Inductive no_conflict : TySubst -> TyVar -> Prop :=
+    | NoCon : forall (S : TySubst) (a : TyVar),
+              S a = None ->
+              (forall (bi : TyVar) (ti : Types),
+               S bi = Some ti -> ~ is_FTV_type ti (TVar a)) ->
+              no_conflict S a.
 
 (* Substitution for type schemes *)
 Inductive subst_scheme : TySubst -> TyScheme -> TyScheme -> Prop :=
     | Sub_Type : forall (S : TySubst) (t t' : Types),
                  subst_type S t t' -> subst_scheme S (TSType t) (TSType t')
     | Sub_Cons : forall (S : TySubst) (a : TyVar) (s s' : TyScheme),
-                 no_conflict S s -> S a = None ->
+                 subst_scheme S s s' -> no_conflict S a ->
                  subst_scheme S (TSCons a s) (TSCons a s').
 
 (* Substitution for type environments *)
