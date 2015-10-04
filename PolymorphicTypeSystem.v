@@ -242,6 +242,116 @@ Proof.
         apply (Sub_List _ _ _ Ht0').
 Qed.
 
+Lemma subst_type_uniq :
+    forall (S : TySubst) (t t1 t2 : Types),
+    subst_type S t t1 -> subst_type S t t2 -> t1 = t2.
+Proof.
+    intros S t t1 t2 Ht1.
+    generalize dependent t2.
+    induction Ht1 as [ S ai ti Hai | S a Ha | S | S |
+                       S ta tb ta' tb' Hsta Hta' Hstb Htb' |
+                       S t0 t0' Hst0 Ht0' ].
+
+        (* Case : Ht1 is from Sub_Var1 *)
+        intros t2 Ht2.
+        inversion Ht2; subst; rewrite Hai in H1.
+
+            (* Case : Ht2 is from Sub_Var1 *)
+            inversion H1; subst.
+            reflexivity.
+
+            (* Case : Ht2 is from Sub_Var2 *)
+            discriminate.
+
+        (* Case : Ht1 is from Sub_Var2 *)
+        intros t2 Ht2.
+        inversion Ht2; subst; rewrite Ha in H1.
+
+            (* Case : Ht2 is from Sub_Var1 *)
+            discriminate.
+
+            (* Case : Ht2 is from Sub_Var2 *)
+            reflexivity.
+
+        (* Case : Ht1 is from Sub_Bool *)
+        intros t2 Ht2.
+        inversion Ht2.
+        reflexivity.
+
+        (* Case : Ht1 is from Sub_Int *)
+        intros t2 Ht2.
+        inversion Ht2.
+        reflexivity.
+
+        (* Case : Ht1 is from Sub_Fun *)
+        intros t2 Ht2.
+        inversion Ht2; subst.
+        rewrite (Hta' _ H2).
+        rewrite (Htb' _ H4).
+        reflexivity.
+
+        (* Case : Ht1 is from Sub_List *)
+        intros t2 Ht2.
+        inversion Ht2; subst.
+        rewrite (Ht0' _ H1).
+        reflexivity.
+Qed.
+
+(* FIXME : The statement is incorrect *)
+Lemma subst_scheme_total :
+    forall (S : TySubst) (s : TyScheme),
+    exists s' : TyScheme, subst_scheme S s s'.
+Proof.
+Admitted.
+
+Lemma subst_scheme_uniq :
+    forall (S : TySubst) (s s1 s2 : TyScheme),
+    subst_scheme S s s1 -> subst_scheme S s s2 -> s1 = s2.
+Proof.
+    intros S s s1 s2 Hs1.
+    generalize dependent s2.
+    induction Hs1 as [ S s s1 Hs1 | S a s' s1' Hss Hs1' Hnc ];
+    intros s2 Hs2;
+    inversion Hs2; subst.
+
+        (* Case : Hs1 is from Sub_Type *)
+        rewrite (subst_type_uniq _ _ _ _ Hs1 H1).
+        reflexivity.
+
+        (* Case : Hs1 is from Sub_Cons *)
+        rewrite (Hs1' _ H2).
+        reflexivity.
+Qed.
+
+Lemma has_type_subst_compat :
+    forall (S : TySubst) (C C' : TEnv) (x : Var) (s s' : TyScheme),
+    subst_env S C C' -> subst_scheme S s s' -> has_type C x s ->
+    has_type C' x s'.
+Proof.
+    intros S C C' x s s' Hse Hss Hht.
+    generalize dependent Hss.
+    generalize dependent Hse.
+    generalize dependent s'.
+    generalize dependent C'.
+    induction Hht as [ C x s | C0 x y s s0 Hht0 HC0 Hneq ];
+        intros C' s' Hse Hss;
+        inversion Hse; subst.
+
+        (* Case : Hht is from HT_Bind1 *)
+        rewrite (subst_scheme_uniq _ _ _ _ Hss H5).
+        apply HT_Bind1.
+
+        (* Case : Hht is from HT_Bind2 *)
+        apply (HT_Bind2 _ _ _ _ _ (HC0 _ _ H4 Hss) Hneq).
+Qed.
+
+Lemma is_instance_subst_compat :
+    forall (S : TySubst) (s s' : TyScheme) (t t' : Types),
+    subst_scheme S s s' -> subst_type S t t' -> is_instance s t ->
+    is_instance s' t'.
+Proof.
+Admitted.
+
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
     forall (C C' : TEnv) (e : Exp) (t t' : Types) (S : TySubst),
@@ -271,7 +381,13 @@ Proof.
         apply T_Bool.
 
         (* Case : e = EVar x *)
-        admit.
+        intros C C' t t' S Ht Hse Hst.
+        inversion Ht; subst.
+        remember (subst_scheme_total S s) as Hss; clear HeqHss.
+        destruct Hss as [s' Hss].
+        remember (has_type_subst_compat _ _ _ _ _ _ Hse Hss H0) as Hht'.
+        remember (is_instance_subst_compat _ _ _ _ _ Hss Hst H2) as Hii'.
+        apply (T_Var _ _ _ _ Hht' Hii').
 
         (* Case : e = EPlus e1 e2 *)
         intros C C' t t' S Ht Hes Hst.
