@@ -203,7 +203,7 @@ Inductive subst_env : TySubst -> TEnv -> TEnv -> Prop :=
                   subst_env S C C' -> subst_scheme S s s' ->
                   subst_env S (TEBind C x s) (TEBind C' x s').
 
-Lemma subst_type_close :
+Lemma subst_type_total :
     forall (S : TySubst) (t : Types),
     exists t' : Types, subst_type S t t'.
 Proof.
@@ -322,7 +322,7 @@ Proof.
         (* Case : e = EApp e1 e2 *)
         intros C C' t t' S Ht Hse Hst.
         inversion Ht; subst.
-        remember (subst_type_close S t1) as Ht1'; clear HeqHt1'.
+        remember (subst_type_total S t1) as Ht1'; clear HeqHt1'.
         destruct Ht1' as [t1' Ht1'].
         apply (T_App _ _ _ _ _
                      (He1 _ _ _ _ _ H2 Hse (Sub_Fun _ _ _ _ _ Ht1' Hst))
