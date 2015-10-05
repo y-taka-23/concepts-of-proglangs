@@ -40,6 +40,27 @@ Inductive Value : Set :=
 Inductive TyVar : Set :=
     | TVId : nat -> TyVar.
 
+Lemma TyVar_eq_dec :
+    forall a1 a2 : TyVar, {a1 = a2} + {a1 <> a2}.
+Proof.
+    intros a1 a2.
+    destruct a1 as [i1].
+    destruct a2 as [i2].
+    destruct (eq_nat_dec i1 i2) as [ H | H ].
+
+        (* Case : i1 = i2 *)
+        left.
+        subst.
+        reflexivity.
+
+        (* Case : i1 <> i2 *)
+        right.
+        intro F.
+        apply H.
+        inversion F; subst.
+        reflexivity.
+Qed.
+
 (* Types at p.146 *)
 Inductive Types : Set :=
     | TVar  : TyVar -> Types
@@ -52,19 +73,6 @@ Inductive Types : Set :=
 Inductive TyScheme : Set :=
     | TSType : Types -> TyScheme
     | TSCons : TyVar -> TyScheme -> TyScheme.
-
-(* Type expression of type schemes *)
-Inductive is_type : TyScheme -> Types -> Prop :=
-    | IT_Type : forall t : Types, is_type (TSType t) t
-    | IT_Cons : forall (a : TyVar) (s : TyScheme) (t : Types),
-                is_type s t -> is_type (TSCons a s) t.
-
-(* Type variables of type schemes *)
-Inductive in_vars : TyScheme -> TyVar -> Prop :=
-    | IV_Cons1 : forall (s : TyScheme) (a : TyVar),
-                 in_vars (TSCons a s) a
-    | IV_Cons2 : forall (s : TyScheme) (a a0 : TyVar),
-                 in_vars s a -> in_vars (TSCons a0 s) a.
 
 (* Type environments at p.146 *)
 Inductive TEnv : Set :=
@@ -79,27 +87,59 @@ Inductive has_type : TEnv -> Var -> TyScheme -> Prop :=
                  has_type C x s -> y <> x ->
                  has_type (TEBind C y s0) x s.
 
-(* Fig 9.1 *)
+(* Type substitution *)
 Definition TySubst := TyVar -> option Types.
-Inductive subst_type : TySubst -> Types -> Types -> Prop :=
-    | Sub_Var1 : forall (S : TySubst) (ai : TyVar) (ti : Types),
-                 S ai = Some ti -> subst_type S (TVar ai) ti
-    | Sub_Var2 : forall (S : TySubst) (a : TyVar),
-                 S a = None -> subst_type S (TVar a) (TVar a)
-    | Sub_Bool : forall S : TySubst, subst_type S TBool TBool
-    | Sub_Int  : forall S : TySubst, subst_type S TInt TInt
-    | Sub_Fun  : forall (S : TySubst) (t1 t2 t1' t2': Types),
-                 subst_type S t1 t1' -> subst_type S t2 t2' ->
-                 subst_type S (TFun t1 t2) (TFun t1' t2')
-    | Sub_List : forall (S : TySubst) (t0 t0': Types),
-                 subst_type S t0 t0' -> subst_type S (TList t0) (TList t0').
+Definition exclude (S : TySubst) (a : TyVar) :=
+    fun a0 => if TyVar_eq_dec a0 a then None else S a0.
+
+(* Fig 9.1 *)
+Fixpoint subst_type (S : TySubst) (t : Types) : Types :=
+    match t with
+    | TVar ai => match S ai with
+                 | Some ti => ti
+                 | None    => TVar ai
+                 end
+    | TBool   => TBool
+    | TInt    => TInt
+    | TFun t1 t2 => TFun (subst_type S t1) (subst_type S t2)
+    | TList t0   => TList (subst_type S t0)
+    end.
+
+(* Substitution for type schemes *)
+Fixpoint subst_scheme (S : TySubst) (s : TyScheme) : TyScheme :=
+    match s with
+    | TSType t    => TSType (subst_type S t)
+    | TSCons a s' => TSCons a (subst_scheme (exclude S a) s')
+    end.
+
+(* Substitution for type environments *)
+Fixpoint subst_env (S : TySubst) (C : TEnv) : TEnv :=
+    match C with
+    | TEEmpty       => TEEmpty
+    | TEBind C' x s => TEBind (subst_env S C') x (subst_scheme S s)
+    end.
+
+(* Type expression of type schemes *)
+Inductive is_type : TyScheme -> Types -> Prop :=
+    | IT_Type : forall t : Types, is_type (TSType t) t
+    | IT_Cons : forall (a : TyVar) (s : TyScheme) (t : Types),
+                is_type s t -> is_type (TSCons a s) t.
+
+(* Type variables of type schemes *)
+Inductive in_vars : TyScheme -> TyVar -> Prop :=
+    | IV_Cons1 : forall (s : TyScheme) (a : TyVar),
+                 in_vars (TSCons a s) a
+    | IV_Cons2 : forall (s : TyScheme) (a a0 : TyVar),
+                 in_vars s a -> in_vars (TSCons a0 s) a.
 
 (* Def 9.1 *)
 Inductive is_instance : TyScheme -> Types -> Prop :=
-    | Inst : forall (s : TyScheme) (S : TySubst) (t t0 : Types),
-             is_type s t0 -> subst_type S t0 t ->
-             (forall (a : TyVar) (t : Types), S a = Some t <-> in_vars s a) ->
-             is_instance s t.
+    | Instance : forall (S : TySubst) (s : TyScheme) (t t0 : Types),
+                 is_type s t0 ->
+                 (forall ai : TyVar,
+                  in_vars s ai <-> exists ti : Types, S ai = Some ti) ->
+                 subst_type S t0 = t ->
+                 is_instance s t.
 
 (* Def 9.2 (Fig 9.2, for types) *)
 Inductive is_FTV_type : Types -> Types -> Prop :=
@@ -182,289 +222,12 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType (TList t'))) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
-Inductive no_conflict : TySubst -> TyVar -> Prop :=
-    | NoCon : forall (S : TySubst) (a : TyVar),
-              S a = None ->
-              (forall (bi : TyVar) (ti : Types),
-               S bi = Some ti -> ~ is_FTV_type ti (TVar a)) ->
-              no_conflict S a.
-
-(* Substitution for type schemes *)
-Inductive subst_scheme : TySubst -> TyScheme -> TyScheme -> Prop :=
-    | Sub_Type : forall (S : TySubst) (t t' : Types),
-                 subst_type S t t' -> subst_scheme S (TSType t) (TSType t')
-    | Sub_Cons : forall (S : TySubst) (a : TyVar) (s s' : TyScheme),
-                 subst_scheme S s s' -> no_conflict S a ->
-                 subst_scheme S (TSCons a s) (TSCons a s').
-
-(* Substitution for type environments *)
-Inductive subst_env : TySubst -> TEnv -> TEnv -> Prop :=
-    | Sub_Empty : forall S : TySubst, subst_env S TEEmpty TEEmpty
-    | Sub_Bind  : forall (S : TySubst) (C C' : TEnv) (x : Var)
-                         (s s': TyScheme),
-                  subst_env S C C' -> subst_scheme S s s' ->
-                  subst_env S (TEBind C x s) (TEBind C' x s').
-
-Lemma subst_type_total :
-    forall (S : TySubst) (t : Types),
-    exists t' : Types, subst_type S t t'.
-Proof.
-    intros S t.
-    induction t as [ a | | | t1 Ht1 t2 Ht2 | t0 Ht0 ].
-
-        (* Case : t = TVar a *)
-        remember (S a) as Ha.
-        destruct Ha as [ ti | ].
-
-            (* Case : S a = Some ti *)
-            exists ti. Print eq_sym.
-            apply (Sub_Var1 _ _ _ (eq_sym HeqHa)).
-
-            (* Case : S a = None *)
-            exists (TVar a).
-            apply (Sub_Var2 _ _ (eq_sym HeqHa)).
-
-        (* Case : t = TBool *)
-        exists TBool.
-        apply Sub_Bool.
-
-        (* Case : t = TInt *)
-        exists TInt.
-        apply Sub_Int.
-
-        (* Case : t = TFun t1 t2 *)
-        destruct Ht1 as [t1' Ht1'].
-        destruct Ht2 as [t2' Ht2'].
-        exists (TFun t1' t2').
-        apply (Sub_Fun _ _ _ _ _ Ht1' Ht2').
-
-        (* Case : t = TList t0 *)
-        destruct Ht0 as [t0' Ht0'].
-        exists (TList t0').
-        apply (Sub_List _ _ _ Ht0').
-Qed.
-
-Lemma subst_type_uniq :
-    forall (S : TySubst) (t t1 t2 : Types),
-    subst_type S t t1 -> subst_type S t t2 -> t1 = t2.
-Proof.
-    intros S t t1 t2 Ht1.
-    generalize dependent t2.
-    induction Ht1 as [ S ai ti Hai | S a Ha | S | S |
-                       S ta tb ta' tb' Hsta Hta' Hstb Htb' |
-                       S t0 t0' Hst0 Ht0' ].
-
-        (* Case : Ht1 is from Sub_Var1 *)
-        intros t2 Ht2.
-        inversion Ht2; subst; rewrite Hai in H1.
-
-            (* Case : Ht2 is from Sub_Var1 *)
-            inversion H1; subst.
-            reflexivity.
-
-            (* Case : Ht2 is from Sub_Var2 *)
-            discriminate.
-
-        (* Case : Ht1 is from Sub_Var2 *)
-        intros t2 Ht2.
-        inversion Ht2; subst; rewrite Ha in H1.
-
-            (* Case : Ht2 is from Sub_Var1 *)
-            discriminate.
-
-            (* Case : Ht2 is from Sub_Var2 *)
-            reflexivity.
-
-        (* Case : Ht1 is from Sub_Bool *)
-        intros t2 Ht2.
-        inversion Ht2.
-        reflexivity.
-
-        (* Case : Ht1 is from Sub_Int *)
-        intros t2 Ht2.
-        inversion Ht2.
-        reflexivity.
-
-        (* Case : Ht1 is from Sub_Fun *)
-        intros t2 Ht2.
-        inversion Ht2; subst.
-        rewrite (Hta' _ H2).
-        rewrite (Htb' _ H4).
-        reflexivity.
-
-        (* Case : Ht1 is from Sub_List *)
-        intros t2 Ht2.
-        inversion Ht2; subst.
-        rewrite (Ht0' _ H1).
-        reflexivity.
-Qed.
-
-(* FIXME : The statement is incorrect *)
-Lemma subst_scheme_total :
-    forall (S : TySubst) (s : TyScheme),
-    exists s' : TyScheme, subst_scheme S s s'.
-Proof.
-Admitted.
-
-Lemma subst_scheme_uniq :
-    forall (S : TySubst) (s s1 s2 : TyScheme),
-    subst_scheme S s s1 -> subst_scheme S s s2 -> s1 = s2.
-Proof.
-    intros S s s1 s2 Hs1.
-    generalize dependent s2.
-    induction Hs1 as [ S s s1 Hs1 | S a s' s1' Hss Hs1' Hnc ];
-    intros s2 Hs2;
-    inversion Hs2; subst.
-
-        (* Case : Hs1 is from Sub_Type *)
-        rewrite (subst_type_uniq _ _ _ _ Hs1 H1).
-        reflexivity.
-
-        (* Case : Hs1 is from Sub_Cons *)
-        rewrite (Hs1' _ H2).
-        reflexivity.
-Qed.
-
-Lemma has_type_subst_compat :
-    forall (S : TySubst) (C C' : TEnv) (x : Var) (s s' : TyScheme),
-    subst_env S C C' -> subst_scheme S s s' -> has_type C x s ->
-    has_type C' x s'.
-Proof.
-    intros S C C' x s s' Hse Hss Hht.
-    generalize dependent Hss.
-    generalize dependent Hse.
-    generalize dependent s'.
-    generalize dependent C'.
-    induction Hht as [ C x s | C0 x y s s0 Hht0 HC0 Hneq ];
-        intros C' s' Hse Hss;
-        inversion Hse; subst.
-
-        (* Case : Hht is from HT_Bind1 *)
-        rewrite (subst_scheme_uniq _ _ _ _ Hss H5).
-        apply HT_Bind1.
-
-        (* Case : Hht is from HT_Bind2 *)
-        apply (HT_Bind2 _ _ _ _ _ (HC0 _ _ H4 Hss) Hneq).
-Qed.
-
-Lemma is_instance_subst_compat :
-    forall (S : TySubst) (s s' : TyScheme) (t t' : Types),
-    subst_scheme S s s' -> subst_type S t t' -> is_instance s t ->
-    is_instance s' t'.
-Proof.
-Admitted.
-
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
-    forall (C C' : TEnv) (e : Exp) (t t' : Types) (S : TySubst),
-    Typable C e t -> subst_env S C C' -> subst_type S t t' ->
-    Typable C' e t'.
+    forall (S : TySubst) (C : TEnv) (e : Exp) (t : Types),
+    Typable C e t -> Typable (subst_env S C) e (subst_type S t).
 Proof.
-    intros C C' e.
-    generalize dependent C'.
-    generalize dependent C.
-    induction e as [ i | b | x |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 |
-                     e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 | x e1 He1 |
-                     e1 He1 e2 He2 | x y e1 He1 e2 He2 | |
-                     e1 He1 e2 He2 | e1 He1 e2 He2 x y e3 He3 ].
-
-        (* Case : e = EInt i *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply T_Int.
-
-        (* Case : e = EBool b *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply T_Bool.
-
-        (* Case : e = EVar x *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        remember (subst_scheme_total S s) as Hss; clear HeqHss.
-        destruct Hss as [s' Hss].
-        remember (has_type_subst_compat _ _ _ _ _ _ Hse Hss H0) as Hht'.
-        remember (is_instance_subst_compat _ _ _ _ _ Hss Hst H2) as Hii'.
-        apply (T_Var _ _ _ _ Hht' Hii').
-
-        (* Case : e = EPlus e1 e2 *)
-        intros C C' t t' S Ht Hes Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply (T_Plus _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
-                            (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
-
-        (* Case : e = EMinus e1 e2 *)
-        intros C C' t t' S Ht Hes Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply (T_Minus _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
-                             (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
-
-        (* Case : e = ETimes e1 e2 *)
-        intros C C' t t' S Ht Hes Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply (T_Times _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
-                             (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
-
-        (* Case : e = ELt e1 e2 *)
-        intros C C' t t' S Ht Hes Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply (T_Lt _ _ _ (He1 _ _ _ _ _ H2 Hes (Sub_Int _))
-                          (He2 _ _ _ _ _ H4 Hes (Sub_Int _))).
-
-        (* Case : e = EIf e1 e2 e3 *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        apply (T_If _ _ _ _ _ (He1 _ _ _ _ _ H3 Hse (Sub_Bool _))
-                              (He2 _ _ _ _ _ H5 Hse Hst)
-                              (He3 _ _ _ _ _ H6 Hse Hst)).
-
-        (* Case : e = ELet x e1 e2 *)
-        admit.
-
-        (* Case : e = EFun x e1 *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply T_Fun.
-        refine (He1 _ _ _ _ _ H3 _ H5).
-        apply (Sub_Bind _ _ _ _ _ _ Hse (Sub_Type _ _ _ H2)).
-
-        (* Case : e = EApp e1 e2 *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        remember (subst_type_total S t1) as Ht1'; clear HeqHt1'.
-        destruct Ht1' as [t1' Ht1'].
-        apply (T_App _ _ _ _ _
-                     (He1 _ _ _ _ _ H2 Hse (Sub_Fun _ _ _ _ _ Ht1' Hst))
-                     (He2 _ _ _ _ _ H4 Hse Ht1')).
-
-        (* Case : e = ELetRec x y e1 e2 *)
-        admit.
-
-        (* Case : e = ENil *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply T_Nil.
-
-        (* Case : e = ECons e1 e2 *)
-        intros C C' t t' S Ht Hse Hst.
-        inversion Ht; subst.
-        inversion Hst; subst.
-        apply (T_Cons _ _ _ _ (He1 _ _ _ _ _ H2 Hse H1)
-                              (He2 _ _ _ _ _ H4 Hse (Sub_List _ _ _ H1))).
-
-        (* Case : e = EMatch x y e1 e2 e3 *)
-        admit.
-Qed.
+Admitted.
 
 (* Def 9.4 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
@@ -494,42 +257,10 @@ Inductive ValueCompat : Value -> Types -> Prop :=
 
 (* Lemma 9.5 *)
 Lemma ValueCompat_subst_compat :
-    forall (S : TySubst) (v : Value) (t t' : Types),
-    ValueCompat v t -> subst_type S t t' -> ValueCompat v t'.
+    forall (S : TySubst) (v : Value) (t : Types),
+    ValueCompat v t -> ValueCompat v (subst_type S t).
 Proof.
-    intros S v.
-    induction v as [ i | b | E x e0 | E x y e0 | | v1 Hv1 v2 Hv2 ].
-
-        (* Case : v = VInt i *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        apply VC_Int.
-
-        (* Case : v = VBool b *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        apply VC_Bool.
-
-        (* Case : v = VFun E x e0 *)
-        admit.
-
-        (* Case : v = VRecFun E x y e0 *)
-        admit.
-
-        (* Case : v = VNil *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        apply VC_Nil.
-
-        (* Case : v = VCons v1 v2 *)
-        intros t t' Hvc Hst.
-        inversion Hvc; subst.
-        inversion Hst; subst.
-        apply (VC_Cons _ _ _ (Hv1 _ _ H1 H2) (Hv2 _ _ H3 (Sub_List _ _ _ H2))).
-Qed.
+Admitted.
 
 End PolymorphicTypeSystem.
 
