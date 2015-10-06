@@ -227,7 +227,95 @@ Lemma Typable_subst_compat :
     forall (S : TySubst) (C : TEnv) (e : Exp) (t : Types),
     Typable C e t -> Typable (subst_env S C) e (subst_type S t).
 Proof.
-Admitted.
+    intros S C e.
+    generalize dependent C.
+    generalize dependent S.
+    induction e as [ i | b | x |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 |
+                     e1 He1 e2 He2 e3 He3 | x e1 He1 e2 He2 | x e He |
+                     e1 He1 e2 He2 | x y e1 He1 e2 He2 | |
+                     e1 He1 e2 He2 | e1 He1 e2 He2 x y e3 He3 ].
+
+        (* Case : e = EInt i *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply T_Int.
+
+        (* Case : e = EBool b *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply T_Bool.
+
+        (* Case : e = EVar x *)
+        admit.
+
+        (* Case : e = EPlus e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Plus _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = EMinus e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Minus _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = ETimes e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Times _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = ELt e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Lt _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = EIf e1 e2 e3 *)
+        intros S C t H.
+        inversion H; subst.
+        apply (T_If _ _ _ _ _ (He1 _ _ _ H4) (He2 _ _ _ H6) (He3 _ _ _ H7)).
+
+        (* Case : e = ELet x e1 e2 *)
+        admit.
+
+        (* Case : e = EFun x e *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Fun _ _ _ _ _ (He _ _ _ H4)).
+
+        (* Case : e = EApp e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        apply (T_App _ _ _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = ELetRec x y e1 e2 *)
+        admit.
+
+        (* Case : e = ENil *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply T_Nil.
+
+        (* Case : e = ECons e1 e2 *)
+        intros S C t H.
+        inversion H; subst.
+        simpl.
+        apply (T_Cons _ _ _ _ (He1 _ _ _ H3) (He2 _ _ _ H5)).
+
+        (* Case : e = EMatch e1 e1 x y e3 *)
+        intros S C t H.
+        inversion H; subst.
+        apply (T_Match _ _ _ _ _ _ _ _
+                       (He1 _ _ _ H7) (He2 _ _ _ H8) (He3 _ _ _ H9)).
+Qed.
 
 (* Def 9.4 *)
 Inductive ValueCompat : Value -> Types -> Prop :=
