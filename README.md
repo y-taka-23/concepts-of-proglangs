@@ -16,4 +16,4 @@
 * 第 3 部 : ML の型システム
     + 第 8 章 : 単純型システム : [SimpleTypeSystem.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/SimpleTypeSystem.v)
     + 第 9 章 : 多相的型システム : [PolymorphicTypeSystem.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/PolymorphicTypeSystem.v)
-    + 第 10 章 : 型推論
+    + 第 10 章 : 型推論 : [TypeInference.v](https://github.com/y-taka-23/concepts-of-proglangs/blob/master/TypeInference.v)
