@@ -141,30 +141,30 @@ Inductive is_instance : TyScheme -> Types -> Prop :=
                  is_instance s t.
 
 (* Def 9.2 (Fig 9.2, for types) *)
-Inductive is_FTV_type : Types -> Types -> Prop :=
+Inductive is_FTV_type : Types -> TyVar -> Prop :=
     | FTV_Var   : forall (a : TyVar),
-                  is_FTV_type (TVar a) (TVar a)
-    | FTV_Fun_l : forall (t t1 t2 : Types),
-                  is_FTV_type t1 t -> is_FTV_type (TFun t1 t2) t
-    | FTV_Fun_r : forall (t t1 t2 : Types),
-                  is_FTV_type t2 t -> is_FTV_type (TFun t1 t2) t
-    | FTV_List  : forall (t : Types),
-                  is_FTV_type (TList t) t.
+                  is_FTV_type (TVar a) a
+    | FTV_Fun_l : forall (a : TyVar) (t1 t2 : Types),
+                  is_FTV_type t1 a -> is_FTV_type (TFun t1 t2) a
+    | FTV_Fun_r : forall (a : TyVar) (t1 t2 : Types),
+                  is_FTV_type t2 a -> is_FTV_type (TFun t1 t2) a
+    | FTV_List  : forall (a : TyVar) (t : Types),
+                  is_FTV_type t a -> is_FTV_type (TList t) a.
 
 (* Def 9.2 (Fig 9.2, for type schemes) *)
-Inductive is_FTV_scheme : TyScheme -> Types -> Prop :=
-    | FTV_Sch1 : forall t t0 : Types,
-                 is_FTV_type t0 t -> is_FTV_scheme (TSType t0) t
-    | FTV_Sch2 : forall (s : TyScheme) (a : TyVar) (t : Types),
-                 is_FTV_scheme s t -> t <> TVar a ->
-                 is_FTV_scheme (TSCons a s) t.
+Inductive is_FTV_scheme : TyScheme -> TyVar -> Prop :=
+    | FTV_Sch1 : forall (a : TyVar) (t : Types),
+                 is_FTV_type t a -> is_FTV_scheme (TSType t) a
+    | FTV_Sch2 : forall (s : TyScheme) (a a0 : TyVar),
+                 is_FTV_scheme s a -> a0 <> a ->
+                 is_FTV_scheme (TSCons a0 s) a.
 
 (* Def 9.2 (Fig 9.2, for type environments) *)
-Inductive is_FTV_env : TEnv -> Types -> Prop :=
-    | FTV_Env1 : forall (C : TEnv) (x : Var) (s : TyScheme) (t : Types),
-                 is_FTV_env C t -> is_FTV_env (TEBind C x s) t
-    | FTV_Env2 : forall (C : TEnv) (x : Var) (s : TyScheme) (t : Types),
-                 is_FTV_scheme s t -> is_FTV_env (TEBind C x s) t.
+Inductive is_FTV_env : TEnv -> TyVar -> Prop :=
+    | FTV_Env1 : forall (C : TEnv) (x : Var) (s : TyScheme) (a : TyVar),
+                 is_FTV_env C a -> is_FTV_env (TEBind C x s) a
+    | FTV_Env2 : forall (C : TEnv) (x : Var) (s : TyScheme) (a : TyVar),
+                 is_FTV_scheme s a -> is_FTV_env (TEBind C x s) a.
 
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
@@ -194,7 +194,7 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                         (s : TyScheme) (t1 t2 : Types),
                  Typable C e1 t1 -> Typable (TEBind C x s) e2 t2 ->
                  is_type s t1 ->
-                 (forall a : TyVar, in_vars s a -> ~ is_FTV_env C (TVar a)) ->
+                 (forall a : TyVar, in_vars s a -> ~ is_FTV_env C a) ->
                  Typable C (ELet x e1 e2) t2
     | T_Fun    : forall (C : TEnv) (e : Exp) (x : Var) (t1 t2 : Types),
                  Typable (TEBind C x (TSType t1)) e t2 ->
@@ -208,7 +208,7 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType t1)) e1 t2 ->
                  Typable (TEBind C x s) e2 t ->
                  is_type s (TFun t1 t2) ->
-                 (forall a : TyVar, in_vars s a -> ~ is_FTV_env C (TVar a)) ->
+                 (forall a : TyVar, in_vars s a -> ~ is_FTV_env C a) ->
                  Typable C (ELetRec x y e1 e2) t
     | T_Nil    : forall (C : TEnv) (t : Types),
                  Typable C ENil (TList t)
