@@ -89,8 +89,6 @@ Inductive has_type : TEnv -> Var -> TyScheme -> Prop :=
 
 (* Type substitution *)
 Definition TySubst := TyVar -> option Types.
-Definition exclude (S : TySubst) (a : TyVar) :=
-    fun a0 => if TyVar_eq_dec a0 a then None else S a0.
 
 (* Fig 9.1 *)
 Fixpoint subst_type (S : TySubst) (t : Types) : Types :=
@@ -106,10 +104,11 @@ Fixpoint subst_type (S : TySubst) (t : Types) : Types :=
     end.
 
 (* Substitution for type schemes *)
+(* FIXME : alpha conversion is ignored *)
 Fixpoint subst_scheme (S : TySubst) (s : TyScheme) : TyScheme :=
     match s with
     | TSType t    => TSType (subst_type S t)
-    | TSCons a s' => TSCons a (subst_scheme (exclude S a) s')
+    | TSCons a s' => TSCons a (subst_scheme S s')
     end.
 
 (* Substitution for type environments *)
