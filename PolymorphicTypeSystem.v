@@ -221,6 +221,92 @@ Inductive Typable : TEnv -> Exp -> Types -> Prop :=
                                   y (TSType (TList t'))) e3 t ->
                  Typable C (EMatch e1 e2 x y e3) t.
 
+Lemma is_type_subst_compat :
+    forall (S : TySubst) (s : TyScheme) (t : Types),
+    is_type s t -> is_type (subst_scheme S s) (subst_type S t).
+Proof.
+    intros S s t Ht.
+    induction s as [ t0 | a s' Hs' ].
+
+        (* Case : s = TSType t0 *)
+        inversion Ht; subst.
+        apply IT_Type.
+
+        (* Case : s = TSCOns a s' *)
+        inversion Ht; subst.
+        simpl.
+        apply (IT_Cons _ _ _ (Hs' H2)).
+Qed.
+
+Lemma subst_in_vars_compat :
+    forall (S : TySubst) (s : TyScheme) (a : TyVar),
+    in_vars (subst_scheme S s) a -> in_vars s a.
+Proof.
+    intros S s a Ha.
+    induction s as [ t0 | a0 s' Hs' ].
+
+        (* Case : s = TSType t0 *)
+        inversion Ha.
+
+        (* Case : s = TSCons a0 s' *)
+        inversion Ha; subst.
+
+            (* Case : Ha is from IV_Cons1 *)
+            apply IV_Cons1.
+
+            (* Case : Ha is from IV_Cons2 *)
+            apply (IV_Cons2 _ _ _ (Hs' H2)).
+Qed.
+
+Lemma subst_is_FTV_type_compat :
+    forall (S : TySubst) (t : Types) (a : TyVar),
+    is_FTV_type (subst_type S t) a -> is_FTV_type t a.
+Proof.
+Admitted.
+
+Lemma subst_is_FTV_scheme_compat :
+    forall (S : TySubst) (s : TyScheme) (a : TyVar),
+    is_FTV_scheme (subst_scheme S s) a -> is_FTV_scheme s a.
+Proof.
+    intros S s a Ha.
+    induction s as [ t0 | a0 s' Hs' ].
+
+        (* Case : s = TSType t0 *)
+        inversion Ha; subst.
+        apply (FTV_Sch1 _ _ (subst_is_FTV_type_compat _ _ _ H0)).
+
+        (* Case : s = TSCons a0 s' *)
+        inversion Ha; subst.
+        apply (FTV_Sch2 _ _ _ (Hs' H1) H3).
+Qed.
+
+Inductive is_FTV_scheme : TyScheme -> TyVar -> Prop :=
+    | FTV_Sch1 : forall (a : TyVar) (t : Types),
+                 is_FTV_type t a -> is_FTV_scheme (TSType t) a
+    | FTV_Sch2 : forall (s : TyScheme) (a a0 : TyVar),
+                 is_FTV_scheme s a -> a0 <> a ->
+                 is_FTV_scheme (TSCons a0 s) a.
+
+Lemma subst_is_FTV_env_compat :
+    forall (S : TySubst) (C : TEnv) (a : TyVar),
+    is_FTV_env (subst_env S C) a -> is_FTV_env C a.
+Proof.
+    intros S C a Ha.
+    induction C as [ | C' HC' x s ].
+
+        (* Case : C = TEEmpty *)
+        inversion Ha.
+
+        (* Case : C = TEBind C' x s *)
+        inversion Ha; subst.
+
+            (* Case : Ha is from FTV_Env1 *)
+            apply (FTV_Env1 _ _ _ _ (HC' H3)).
+
+            (* Case : Ha is from FTV_Env2 *)
+            apply (FTV_Env2 _ _ _ _ (subst_is_FTV_scheme_compat _ _ _ H3)).
+Qed.
+
 (* Lemma 9.3 *)
 Lemma Typable_subst_compat :
     forall (S : TySubst) (C : TEnv) (e : Exp) (t : Types),
@@ -281,7 +367,13 @@ Proof.
         apply (T_If _ _ _ _ _ (He1 _ _ _ H4) (He2 _ _ _ H6) (He3 _ _ _ H7)).
 
         (* Case : e = ELet x e1 e2 *)
-        admit.
+        intros S C t H.
+        inversion H; subst.
+        apply (T_Let _ _ _ _ (subst_scheme S s) (subst_type S t1) _
+               (He1 _ _ _ H3) (He2 _ _ _ H5) (is_type_subst_compat _ _ _ H7)).
+        intros a Ha HFTV.
+        apply (H8 _ (subst_in_vars_compat _ _ _ Ha)).
+        apply (subst_is_FTV_env_compat _ _ _ HFTV).
 
         (* Case : e = EFun x e *)
         intros S C t H.
