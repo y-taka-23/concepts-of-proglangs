@@ -166,6 +166,19 @@ Inductive is_FTV_env : TEnv -> TyVar -> Prop :=
     | FTV_Env2 : forall (C : TEnv) (x : Var) (s : TyScheme) (a : TyVar),
                  is_FTV_scheme s a -> is_FTV_env (TEBind C x s) a.
 
+(* Replacement of type variables *)
+Inductive Replace : TyVar -> TyVar -> Types -> Types -> Prop :=
+    | Rep_Var1 : forall a1 a2 : TyVar, Replace a1 a2 (TVar a1) (TVar a2)
+    | Rep_Var2 : forall a1 a2 a : TyVar,
+                 a <> a1 -> a <> a2 -> Replace a1 a2 (TVar a) (TVar a)
+    | Rep_Bool : forall a1 a2 a : TyVar, Replace a1 a2 TBool TBool
+    | Rep_Int  : forall a1 a2 a : TyVar, Replace a1 a2 TInt TInt
+    | Rep_Fun  : forall (a1 a2 : TyVar) (t1 t2 t3 t4 : Types),
+                 Replace a1 a2 t1 t3 -> Replace a1 a2 t2 t4 ->
+                 Replace a1 a2 (TFun t1 t2) (TFun t3 t4)
+    | Rep_List : forall (a1 a2 : TyVar) (t1 t2 : Types),
+                 Replace a1 a2 t1 t2 -> Replace a1 a2 (TList t1) (TList t2).
+
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
     | T_Int    : forall (C : TEnv) (i : Z),
