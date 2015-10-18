@@ -179,6 +179,19 @@ Inductive Replace : TyVar -> TyVar -> Types -> Types -> Prop :=
     | Rep_List : forall (a1 a2 : TyVar) (t1 t2 : Types),
                  Replace a1 a2 t1 t2 -> Replace a1 a2 (TList t1) (TList t2).
 
+(* Alpha-conversion *)
+Inductive alpha_conv : TyVar -> TyVar -> TyScheme -> TyScheme -> Prop :=
+    | Alpha_One   : forall (a1 a2 : TyVar) (t1 t2 : Types),
+                    Replace a1 a2 t1 t2 ->
+                    alpha_conv a1 a2
+                               (TSCons a1 (TSType t1)) (TSCons a2 (TSType t2))
+    | Alpha_Cons1 : forall (a1 a2 : TyVar) (s1 s2 : TyScheme),
+                    alpha_conv a1 a2 s1 s2 ->
+                    alpha_conv a1 a2 (TSCons a1 s1) (TSCons a2 s2)
+    | Alpha_Cons2 : forall (a1 a2 a : TyVar) (s1 s2 : TyScheme),
+                    alpha_conv a1 a2 s1 s2 -> a <> a1 -> a <> a2 ->
+                    alpha_conv a1 a2 (TSCons a s1) (TSCons a s2).
+
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
     | T_Int    : forall (C : TEnv) (i : Z),
