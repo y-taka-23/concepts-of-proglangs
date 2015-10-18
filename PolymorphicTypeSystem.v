@@ -170,7 +170,7 @@ Inductive is_FTV_env : TEnv -> TyVar -> Prop :=
 Inductive Replace : TyVar -> TyVar -> Types -> Types -> Prop :=
     | Rep_Var1 : forall a1 a2 : TyVar, Replace a1 a2 (TVar a1) (TVar a2)
     | Rep_Var2 : forall a1 a2 a : TyVar,
-                 a <> a1 -> a <> a2 -> Replace a1 a2 (TVar a) (TVar a)
+                 a <> a1 -> Replace a1 a2 (TVar a) (TVar a)
     | Rep_Bool : forall a1 a2 a : TyVar, Replace a1 a2 TBool TBool
     | Rep_Int  : forall a1 a2 a : TyVar, Replace a1 a2 TInt TInt
     | Rep_Fun  : forall (a1 a2 : TyVar) (t1 t2 t3 t4 : Types),
