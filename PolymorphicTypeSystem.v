@@ -192,6 +192,15 @@ Inductive alpha_conv : TyVar -> TyVar -> TyScheme -> TyScheme -> Prop :=
                     alpha_conv a1 a2 s1 s2 -> a <> a1 -> a <> a2 ->
                     alpha_conv a1 a2 (TSCons a s1) (TSCons a s2).
 
+(* Alpha-equivalence *)
+Inductive alpha_eq : TyScheme -> TyScheme -> Prop :=
+    | Alpha_conv  : forall (a1 a2 : TyVar) (s1 s2 : TyScheme),
+                    alpha_conv a1 a2 s1 s2 -> alpha_eq s1 s2
+    | Alpha_refl  : forall s : TyScheme, alpha_eq s s
+    | Alpha_sym   : forall s1 s2 : TyScheme, alpha_eq s1 s2 -> alpha_eq s2 s1
+    | Alpha_trans : forall s1 s2 s3 : TyScheme,
+                    alpha_eq s1 s2 -> alpha_eq s2 s3 -> alpha_eq s1 s3.
+
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
     | T_Int    : forall (C : TEnv) (i : Z),
