@@ -88,12 +88,14 @@ Inductive has_type : TEnv -> Var -> TyScheme -> Prop :=
                  has_type (TEBind C y s0) x s.
 
 (* Type substitution *)
-Definition TySubst := TyVar -> option Types.
+Definition TySubst :=
+    {S : TyVar -> option Types |
+     exists m : nat, forall n : nat, le m n -> S (TVId n) = None}.
 
 (* Fig 9.1 *)
 Fixpoint subst_type (S : TySubst) (t : Types) : Types :=
     match t with
-    | TVar ai => match S ai with
+    | TVar ai => match (proj1_sig S) ai with
                  | Some ti => ti
                  | None    => TVar ai
                  end
@@ -136,7 +138,8 @@ Inductive is_instance : TyScheme -> Types -> Prop :=
     | Instance : forall (S : TySubst) (s : TyScheme) (t t0 : Types),
                  is_type s t0 ->
                  (forall ai : TyVar,
-                  in_vars s ai <-> exists ti : Types, S ai = Some ti) ->
+                  in_vars s ai <->
+                  exists ti : Types, (proj1_sig S) ai = Some ti) ->
                  subst_type S t0 = t ->
                  is_instance s t.
 
