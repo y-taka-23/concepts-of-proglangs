@@ -318,13 +318,6 @@ Proof.
         apply (FTV_Sch2 _ _ _ (Hs' H1) H3).
 Qed.
 
-Inductive is_FTV_scheme : TyScheme -> TyVar -> Prop :=
-    | FTV_Sch1 : forall (a : TyVar) (t : Types),
-                 is_FTV_type t a -> is_FTV_scheme (TSType t) a
-    | FTV_Sch2 : forall (s : TyScheme) (a a0 : TyVar),
-                 is_FTV_scheme s a -> a0 <> a ->
-                 is_FTV_scheme (TSCons a0 s) a.
-
 Lemma subst_is_FTV_env_compat :
     forall (S : TySubst) (C : TEnv) (a : TyVar),
     is_FTV_env (subst_env S C) a -> is_FTV_env C a.
