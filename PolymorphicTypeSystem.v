@@ -210,23 +210,7 @@ Lemma subst_no_conflict :
     exists s' : TyScheme,
     alpha_eq s s' /\ forall a : TyVar, in_vars s' a -> (proj1_sig S) a = None.
 Proof.
-    intros [S HS]; simpl.
-    induction s as [ t | a s0 Hs0 ].
-
-        (* Case : s = TSType t *)
-        exists (TSType t).
-        split.
-
-            (* Proof : alpha equivalence *)
-            apply Alpha_refl.
-
-            (* Proof : no conflict *)
-            intros a Ha.
-            inversion Ha.
-
-        (* Case : s = TSCons a s0 *)
-        admit.
-Qed.
+Admitted.
 
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
