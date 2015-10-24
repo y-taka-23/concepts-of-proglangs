@@ -199,6 +199,8 @@ Inductive alpha_conv : TyVar -> TyVar -> TyScheme -> TyScheme -> Prop :=
 Inductive alpha_eq : TyScheme -> TyScheme -> Prop :=
     | Alpha_conv  : forall (a1 a2 : TyVar) (s1 s2 : TyScheme),
                     alpha_conv a1 a2 s1 s2 -> alpha_eq s1 s2
+    | Alpha_cons  : forall (a : TyVar) (s1 s2 : TyScheme),
+                    alpha_eq (TSCons a s1) (TSCons a s2)
     | Alpha_refl  : forall s : TyScheme, alpha_eq s s
     | Alpha_sym   : forall s1 s2 : TyScheme, alpha_eq s1 s2 -> alpha_eq s2 s1
     | Alpha_trans : forall s1 s2 s3 : TyScheme,
@@ -210,7 +212,48 @@ Lemma subst_no_conflict :
     exists s' : TyScheme,
     alpha_eq s s' /\ forall a : TyVar, in_vars s' a -> (proj1_sig S) a = None.
 Proof.
-Admitted.
+    intros S s.
+    generalize dependent S.
+    induction s as [ t | a s0 Hs0 ].
+
+        (* Case : s = TSType t *)
+        intro S.
+        exists (TSType t).
+        split.
+
+            (* Proof : alpha equivalence *)
+            apply Alpha_refl.
+
+            (* Proof : no confliction *)
+            intros a Ha.
+            inversion Ha.
+
+        (* Case : s = TSCons a s0 *)
+        intro S.
+        destruct (Hs0 S) as [s' [Hs'_alpha Hs'_none]].
+        remember (proj1_sig S a) as res.
+        destruct res as [ t0 | ].
+
+            (* Case : proj1_sig S a = Some t0 *)
+            admit.
+
+            (* Case : proj1_sig S a = None *)
+            exists (TSCons a s').
+            split.
+
+                (* Proof : alpha equivalence *)
+                apply Alpha_cons.
+
+                (* Proof : no confliction *)
+                intros a0 Ha0.
+                inversion Ha0; subst.
+
+                    (* Case : Ha0 is from IV_Cons1 *)
+                    apply (eq_sym Heqres).
+
+                    (* Case : Ha0 is from IV_Cons2 *)
+                    apply (Hs'_none _ H2).
+Qed.
 
 (* Fig 9.3 *)
 Inductive Typable : TEnv -> Exp -> Types -> Prop :=
